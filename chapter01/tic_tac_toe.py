@@ -87,6 +87,34 @@ class State:
                         pass
 
 
+def _dfs_states_recur(cur_symbol, cur_state, states_d):
+    """DFS for next state by recursion."""
+    for r in range(BOARD_NROWS):
+        for c in range(BOARD_NCOLS):
+            if cur_state.board[r][c] == ' ':
+                next_state = cur_state.next_state(r, c, cur_symbol)
+                if next_state.state not in states_d:
+                    states_d[next_state.state] = next_state
+
+                    # If game is not ended, continue DFS.
+                    if not next_state.is_end:
+                        if cur_symbol == 'X':
+                            _dfs_states_recur('O', next_state, states_d)
+                        else:
+                            _dfs_states_recur('X', next_state, states_d)
+
+
+def get_all_states():
+    """Get all states from the init state."""
+    # The player who plays first always uses 'X'.
+    cur_symbol = 'X'
+    cur_state = State()
+    states_d = dict()
+    states_d[cur_state.state] = cur_state
+    _dfs_states_recur(cur_symbol, cur_state, states_d)
+    return states_d
+
+
 class Agent:
     def __init__(self, symbol, step_size=0.01, epsilon=0.1):
         self.symbol = symbol
