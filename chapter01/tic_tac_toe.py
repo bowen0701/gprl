@@ -128,31 +128,55 @@ class Agent:
         self.symbol = symbol
         self.step_size = step_size
         self.epsilon = epsilon
+
+        self.state_value_table = dict()
+        self.init_state_value()
+        
         self.states = []
         self.state_parent_d = dict()
         self.state_isgreedy_d = dict()
 
     def init_state_values(self):
         """Init state-value table."""
-        self.state_value_table = None
-        pass
+        for state in ALL_STATES_D:
+            if state.winner == self.symbol:
+                self.state_value_table[state] = 1.0
+            elif state.winner == -self.symbol:
+                self.state_value_table[state] = 0.0
+            else:
+                self.state_value_table[state] = 0.5
     
     def load_state_values(self):
         """Load learned state-value table."""
         self.state_value_table = None
         pass
 
-    def reset_episode(self):
-        """Rreset moves in a played episode."""
+    def _get_possible_moves(self):
         pass
     
-    def play(self, state):
-        """Play a move from possible states given a state."""
+    def act(self, state):
+        """Play a move from possible states given a state.
+        
+        Temporal-difference learning:
+          V(S_t) <- V(S_t) + a * [V(S_{t+1}) - V(S_t)]
+        where a is the step size, and V(S_t) is the state-value function
+        at time step t.
+        
+        Epsilon-greedy strategy: 
+        - p% of random exploration and 
+        - (100-p)% exploitation.
+        """
         pass
     
     def backup_value(self, state, reward):
         """Back up value by a temporal-difference learning after an opisode."""
         pass
+
+    def reset_episode(self):
+        """Rreset moves in a played episode."""
+        self.states = []
+        self.state_parent_d = dict()
+        self.state_isgreedy_d = dict()
 
 
 # TODO: Continue implementing tic-tac-toe.
