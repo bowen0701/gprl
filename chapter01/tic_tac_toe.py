@@ -20,12 +20,20 @@ def hash(board):
     return ','.join([str(x) for x in list(board.reshape(BOARD_SIZE))])
 
 
+def hash(board):
+    return ','.join([str(x) for x in list(board.reshape(BOARD_SIZE))])
+
+
+def unhash(state):
+    return np.fromstring(state, dtype=int, sep=',')
+
+
 class State:
     def __init__(self):
         self.board = np.array([EMPTY] * BOARD_SIZE).reshape((BOARD_NROWS, BOARD_NCOLS))
         self.state = hash(self.board)
-        self.winner = None
         self.is_end = False
+        self.winner = None
     
     def judge(self):
         """Judge winner and is_end based on the current state."""
@@ -34,8 +42,8 @@ class State:
             row = self.board[r, :]
             symbol = row[0]
             if symbol != EMPTY and np.sum(row) == symbol * NMARKS:
-                self.winner = symbol
                 self.is_end = True
+                self.winner = symbol
                 return self
         
         # Iterate each col to judge winner.
@@ -43,8 +51,8 @@ class State:
             col = self.board[:, c]
             symbol = col[0]
             if symbol != EMPTY and np.sum(col) == symbol * NMARKS:
-                self.winner = symbol
                 self.is_end = True
+                self.winner = symbol
                 return self
         
         # Check 2 diagonals to judge winner.
@@ -57,8 +65,8 @@ class State:
 
             diag1, diag2 = np.array(diag1), np.array(diag1)
             if np.sum(diag1) == symbol * NMARKS or np.sum(diag2) == symbol:
-                self.winner = symbol
                 self.is_end = True
+                self.winner = symbol
                 return self
 
         # Judge tie with no winner.
@@ -74,6 +82,21 @@ class State:
         next_state.state = hash(next_state.board)
         next_state.judge()
         return next_state
+
+    def show_board(self):
+        board = self.board.tolist()
+        for r in range(BOARD_NROWS):
+            for c in range(BOARD_NCOLS):
+                if board[r][c] == CROSS:
+                    board[r][c] = 'X'
+                elif board[r][c] == CIRCLE:
+                    board[r][c] = 'O'
+                else:
+                    board[r][c] = ' '
+        print('Board: is_end={}, winner={}'.format(self.is_end, self.winner))
+        print(board[0])
+        print(board[1])
+        print(board[2])
 
 
 def _dfs_states_recur(cur_symbol, cur_state, states_d):
