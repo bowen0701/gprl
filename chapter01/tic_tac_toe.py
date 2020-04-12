@@ -93,37 +93,38 @@ class State:
                     board[r][c] = 'O'
                 else:
                     board[r][c] = ' '
+
         print('Board: is_end={}, winner={}'.format(self.is_end, self.winner))
         print(board[0])
         print(board[1])
         print(board[2])
 
 
-def _dfs_states_recur(cur_symbol, cur_state, states_d):
+def _dfs_states(cur_symbol, cur_state, states_d):
     """DFS for next state by recursion."""
     for r in range(BOARD_NROWS):
         for c in range(BOARD_NCOLS):
-            if cur_state.board[r][c] == ' ':
+            if cur_state.board[r][c] == EMPTY:
                 next_state = cur_state.next_state(r, c, cur_symbol)
                 if next_state.state not in states_d:
                     states_d[next_state.state] = next_state
 
                     # If game is not ended, continue DFS.
                     if not next_state.is_end:
-                        if cur_symbol == 'X':
-                            _dfs_states_recur('O', next_state, states_d)
+                        if cur_symbol == CROSS:
+                            _dfs_states(CIRCLE, next_state, states_d)
                         else:
-                            _dfs_states_recur('X', next_state, states_d)
+                            _dfs_states(CROSS, next_state, states_d)
 
 
 def get_all_states():
     """Get all states from the init state."""
     # The player who plays first always uses 'X'.
-    cur_symbol = 'X'
+    cur_symbol = CROSS
     cur_state = State()
     states_d = dict()
     states_d[cur_state.state] = cur_state
-    _dfs_states_recur(cur_symbol, cur_state, states_d)
+    _dfs_states(cur_symbol, cur_state, states_d)
     return states_d
 
 
