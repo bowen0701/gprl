@@ -95,9 +95,7 @@ class State:
                     board[r][c] = ' '
 
         print('Board: is_end={}, winner={}'.format(self.is_end, self.winner))
-        print(board[0])
-        print(board[1])
-        print(board[2])
+        [print(board[r]) for r in range(BOARD_NROWS)]
 
 
 def _dfs_states(cur_symbol, cur_state, states_d):
@@ -111,10 +109,7 @@ def _dfs_states(cur_symbol, cur_state, states_d):
 
                     # If game is not ended, continue DFS.
                     if not next_state.is_end:
-                        if cur_symbol == CROSS:
-                            _dfs_states(CIRCLE, next_state, states_d)
-                        else:
-                            _dfs_states(CROSS, next_state, states_d)
+                        _dfs_states(-cur_symbol, next_state, states_d)
 
 
 def get_all_states():
