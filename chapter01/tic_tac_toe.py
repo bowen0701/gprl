@@ -200,7 +200,6 @@ class Agent:
 
         # Apply epsilon-greedy strategy.
         (next_state, is_greedy) = self._play_strategy(next_states)
-
         self.actstate_parent_isgreedy_d[next_state.state] = {
             'parent': self.states[-1],
             'is_greedy': is_greedy
