@@ -15,9 +15,7 @@ CROSS = 1
 CIRCLE = -1
 EMPTY = 0
 
-
-def hash(board):
-    return ','.join([str(x) for x in list(board.reshape(BOARD_SIZE))])
+np.random.seed(seed=71)
 
 
 def hash(board):
@@ -30,7 +28,8 @@ def unhash(state):
 
 class State:
     def __init__(self):
-        self.board = np.array([EMPTY] * BOARD_SIZE).reshape((BOARD_NROWS, BOARD_NCOLS))
+        self.board = (np.array([EMPTY] * BOARD_SIZE)
+                      .reshape((BOARD_NROWS, BOARD_NCOLS)))
         self.state = hash(self.board)
         self.is_end = False
         self.winner = None
@@ -129,12 +128,15 @@ class Agent:
         self.step_size = step_size
         self.epsilon = epsilon
 
+        # Create an afterstate-value table.
         self.state_value_table = dict()
         self.init_state_value()
-        
+
+        # Memoize all states played by two players.
         self.states = []
-        self.state_parent_d = dict()
-        self.state_isgreedy_d = dict()
+
+        # Momoize action states and their parent states & is_greedy bools.
+        self.actstate_parent_isgreedy_d = dict()
 
     def init_state_values(self):
         """Init state-value table."""
@@ -151,32 +153,74 @@ class Agent:
         self.state_value_table = None
         pass
 
+    def set_state(self, state):
+        """State the latest state."""
+        self.states.append(state)
+
     def _get_possible_moves(self):
-        pass
+        """Get possible moves from possible states given current state."""
+        state = self.states[-1]
+        next_states = []
+
+        for r in range(BOARD_NROWS):
+            for c in range(BOARD_NCOLS):
+                if state.board[r][c] == EMPTY:
+                    next_state = state.next_state(r, c, self.symbol)
+                    next_states.append(next_state)
+        return next_states
+
+    def _play_strategy(self, next_states):
+        """Play by strategy. Here we use epsilon-greedy strategy.
+
+        Epsilon-greedy strategy: 
+        - Take exploratory moves in the p% of times. 
+        - Take greedy moves in the (100-p)% of times.
+        where p% is epsilon. 
+        If epsilon is zero, then use the greedy strategy.
+        """
+        p = np.random.random()
+        if p > self.epsilon:
+            # Exploit.
+            values_states = [(self.state_value_table[st], st)
+                             for st in next_states]
+            values_states.sort(reverse=True)
+            next_state = values_states[0]
+            is_greedy = True
+        else:
+            # Explore.
+            np.random.shuffle(next_states)
+            next_state = next_states[0]
+            is_greedy = False
+        return (next_state, is_greedy)
     
     def act(self, state):
-        """Play a move from possible states given a state.
+        """Play a move from possible states given current state."""
+        # Get possible moves given a state by replacing EMPTY cells.
+        next_states = self._get_possible_moves()
+
+        # Apply epsilon-greedy strategy.
+        (next_state, is_greedy) = self._play_strategy(next_states)
+
+        self.actstate_parent_isgreedy_d[next_state.state] = {
+            'parent': self.states[-1],
+            'is_greedy': is_greedy
+        }
+        return next_state
+
+    def backup_value(self, state, reward):
+        """Back up value by a temporal-difference learning after a move.
         
         Temporal-difference learning:
           V(S_t) <- V(S_t) + a * [V(S_{t+1}) - V(S_t)]
         where a is the step size, and V(S_t) is the state-value function
         at time step t.
-        
-        Epsilon-greedy strategy: 
-        - p% of random exploration and 
-        - (100-p)% exploitation.
         """
-        pass
-    
-    def backup_value(self, state, reward):
-        """Back up value by a temporal-difference learning after an opisode."""
         pass
 
     def reset_episode(self):
         """Rreset moves in a played episode."""
         self.states = []
-        self.state_parent_d = dict()
-        self.state_isgreedy_d = dict()
+        self.actstate_parent_isgreedy_d = dict()
 
 
 # TODO: Continue implementing tic-tac-toe.
