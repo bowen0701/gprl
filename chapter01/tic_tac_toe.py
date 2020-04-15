@@ -28,8 +28,7 @@ def unhash(state):
 
 class State:
     def __init__(self):
-        self.board = (np.array([EMPTY] * BOARD_SIZE)
-                      .reshape((BOARD_NROWS, BOARD_NCOLS)))
+        self.board = np.array([EMPTY] * BOARD_SIZE).reshape((BOARD_NROWS, BOARD_NCOLS))
         self.state = hash(self.board)
         self.is_end = False
         self.winner = None
