@@ -205,6 +205,8 @@ class Agent:
         }
         return next_state
 
+    # TODO: Continue implementing tic-tac-toe.
+
     def backup_value(self, state, reward):
         """Back up value by a temporal-difference learning after a move.
         
@@ -219,6 +221,3 @@ class Agent:
         """Rreset moves in a played episode."""
         self.states = []
         self.actstate_parent_isgreedy_d = dict()
-
-
-# TODO: Continue implementing tic-tac-toe.
