@@ -128,7 +128,7 @@ class Agent:
         self.epsilon = epsilon
 
         # Create an afterstate-value table.
-        self.state_value_table = dict()
+        self.V = dict()
         self.init_state_value()
 
         # Memoize all states played by two players.
@@ -141,15 +141,15 @@ class Agent:
         """Init state-value table."""
         for state in ALL_STATES_D:
             if state.winner == self.symbol:
-                self.state_value_table[state] = 1.0
+                self.V[state] = 1.0
             elif state.winner == -self.symbol:
-                self.state_value_table[state] = 0.0
+                self.V[state] = 0.0
             else:
-                self.state_value_table[state] = 0.5
+                self.V[state] = 0.5
     
     def load_state_values(self):
         """Load learned state-value table."""
-        self.state_value_table = None
+        self.V = None
         pass
 
     def set_state(self, state):
@@ -180,7 +180,7 @@ class Agent:
         p = np.random.random()
         if p > self.epsilon:
             # Exploit.
-            values_states = [(self.state_value_table[st], st)
+            values_states = [(self.V[st], st)
                              for st in next_states]
             values_states.sort(reverse=True)
             next_state = values_states[0]
