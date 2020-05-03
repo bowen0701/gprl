@@ -28,7 +28,8 @@ def unhash(state):
 
 class State:
     def __init__(self):
-        self.board = np.array([EMPTY] * BOARD_SIZE).reshape((BOARD_NROWS, BOARD_NCOLS))
+        self.board = (np.array([EMPTY] * BOARD_SIZE)
+                        .reshape((BOARD_NROWS, BOARD_NCOLS)))
         self.state = hash(self.board)
         self.is_end = False
         self.winner = None
@@ -135,17 +136,17 @@ class Agent:
         self.states = []
 
         # Momoize action states and their parent states & is_greedy bools.
-        self.actstate_parent_isgreedy_d = dict()
+        self.state_parent_is_greedy_d = dict()
 
     def init_state_values(self):
         """Init state-value table."""
-        for state in ALL_STATES_D:
-            if state.winner == self.symbol:
-                self.V[state] = 1.0
-            elif state.winner == -self.symbol:
-                self.V[state] = 0.0
+        for s in ALL_STATES_D:
+            if s.winner == self.symbol:
+                self.V[s] = 1.0
+            elif s.winner == -self.symbol:
+                self.V[s] = 0.0
             else:
-                self.V[state] = 0.5
+                self.V[s] = 0.5
     
     def load_state_values(self):
         """Load learned state-value table."""
@@ -169,7 +170,7 @@ class Agent:
         return next_states
 
     def _play_strategy(self, next_states):
-        """Play by strategy. Here we use epsilon-greedy strategy.
+        """Play with strategy. Here we use epsilon-greedy strategy.
 
         Epsilon-greedy strategy: 
         - Take exploratory moves in the p% of times. 
@@ -180,17 +181,17 @@ class Agent:
         p = np.random.random()
         if p > self.epsilon:
             # Exploit.
-            values_states = [(self.V[st], st)
-                             for st in next_states]
-            values_states.sort(reverse=True)
-            next_state = values_states[0]
+            s, v = None, -float('inf')
+            for i in range(len(next_states)):
+                s_ = next_states[i]
+                v_ = self.V[s_]
+                if v_ > v: s, v = s_, v_
             is_greedy = True
         else:
             # Explore.
-            np.random.shuffle(next_states)
-            next_state = next_states[0]
+            s = np.random.choice(next_states)
             is_greedy = False
-        return (next_state, is_greedy)
+        return (s, is_greedy)
     
     def act(self, state):
         """Play a move from possible states given current state."""
@@ -199,7 +200,7 @@ class Agent:
 
         # Apply epsilon-greedy strategy.
         (next_state, is_greedy) = self._play_strategy(next_states)
-        self.actstate_parent_isgreedy_d[next_state.state] = {
+        self.state_parent_is_greedy_d[next_state.state] = {
             'parent': self.states[-1],
             'is_greedy': is_greedy
         }
@@ -220,4 +221,4 @@ class Agent:
     def reset_episode(self):
         """Rreset moves in a played episode."""
         self.states = []
-        self.actstate_parent_isgreedy_d = dict()
+        self.state_parent_is_greedy_d = dict()
