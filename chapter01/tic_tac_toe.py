@@ -30,7 +30,7 @@ class State:
     def __init__(self):
         self.board = (np.array([EMPTY] * BOARD_SIZE)
                         .reshape((BOARD_NROWS, BOARD_NCOLS)))
-        self.state = hash(self.board)
+        self.hash = hash(self.board)
         self.is_end = False
         self.winner = None
     
@@ -73,12 +73,12 @@ class State:
             self.is_end = True
             return self
 
-    def next_state(self, r, c, symbol):
+    def set_next_state(self, r, c, symbol):
         """Create the next state at position (r, c)."""
         next_state = State()
         next_state.board = self.board.copy()
         next_state.board[r][c] = symbol
-        next_state.state = hash(next_state.board)
+        next_state.hash = hash(next_state.board)
         next_state.judge()
         return next_state
 
@@ -102,9 +102,9 @@ def _dfs_states(cur_symbol, cur_state, states_d):
     for r in range(BOARD_NROWS):
         for c in range(BOARD_NCOLS):
             if cur_state.board[r][c] == EMPTY:
-                next_state = cur_state.next_state(r, c, cur_symbol)
-                if next_state.state not in states_d:
-                    states_d[next_state.state] = next_state
+                next_state = cur_state.set_next_state(r, c, cur_symbol)
+                if next_state.hash not in states_d:
+                    states_d[next_state.hash] = next_state
 
                     # If game is not ended, continue DFS.
                     if not next_state.is_end:
@@ -116,8 +116,10 @@ def get_all_states():
     # The player who plays first always uses 'X'.
     cur_symbol = CROSS
     cur_state = State()
+
+    # Create a dict states_d:hashed state->state object.
     states_d = dict()
-    states_d[cur_state.state] = cur_state
+    states_d[cur_state.hash] = cur_state
     _dfs_states(cur_symbol, cur_state, states_d)
     return states_d
 
@@ -128,7 +130,7 @@ class Agent:
         self.step_size = step_size
         self.epsilon = epsilon
 
-        # Create an afterstate-value table.
+        # Create an afterstate-value table V:hashed state->value.
         self.V = dict()
         self.init_state_value()
 
@@ -136,12 +138,15 @@ class Agent:
         self.states = []
 
         # Momoize action states and their parent states & greedy bools.
+        # - state_parent_d:hashed state->parent state.
+        # - state_greedy_d:hashed state->is greedy.
         self.state_parent_d = dict()
         self.state_greedy_d = dict()
 
     def init_state_values(self):
         """Init state-value table."""
-        for s in ALL_STATES_D:
+        for state in ALL_STATES_D:
+            s = state.hash
             if s.winner == self.symbol:
                 self.V[s] = 1.0
             elif s.winner == -self.symbol:
@@ -166,7 +171,7 @@ class Agent:
         for r in range(BOARD_NROWS):
             for c in range(BOARD_NCOLS):
                 if state.board[r][c] == EMPTY:
-                    next_state = state.next_state(r, c, self.symbol)
+                    next_state = state.set_next_state(r, c, self.symbol)
                     next_states.append(next_state)
         return next_states
 
@@ -184,10 +189,11 @@ class Agent:
             # Exploit.
             next_state, value = None, -float('inf')
             for i in range(len(next_states)):
-                s = next_states[i]
-                v = self.V[s_]
-                if v > state:
-                    next_state, value = s, v
+                _next_state = next_states[i]
+                s = _next_state.hash
+                v = self.V[s]
+                if v > value:
+                    next_state, value = _next_state, v
             is_greedy = True
         else:
             # Explore.
@@ -195,28 +201,31 @@ class Agent:
             is_greedy = False
         return (next_state, is_greedy)
     
-    def act(self, state):
+    def act(self):
         """Play a move from possible states given current state."""
         # Get possible moves given a state by replacing EMPTY cells.
         next_states = self._get_possible_moves()
 
         # Apply epsilon-greedy strategy.
         (next_state, is_greedy) = self._play_strategy(next_states)
-        self.state_parent_d[next_state.state] = self.states[-1]
-        self.state_greedy_d[next_state.state] = is_greedy
+        s = next_state.hash
+        self.state_parent_d[s] = self.states[-1]
+        self.state_greedy_d[s] = is_greedy
         return next_state
 
-    # TODO: Continue implementing tic-tac-toe.
-
     def backup_value(self, state, reward):
-        """Back up value by a temporal-difference learning after a move.
+        """Back up value by a temporal-difference learning after a greedy move.
         
         Temporal-difference learning:
           V(S_t) <- V(S_t) + a * [V(S_{t+1}) - V(S_t)]
         where a is the step size, and V(S_t) is the state-value function
         at time step t.
         """
-        pass
+        s = state.hash
+        s_before = self.state_parent_d[s].hash
+        is_greedy = self.state_greedy_d[s]
+        if is_greedy:
+            self.V[s_before] += self.step_size * (self.V[s] - self.V[s_before])
 
     def reset_episode(self):
         """Rreset moves in a played episode."""
