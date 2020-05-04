@@ -125,14 +125,17 @@ def get_all_states():
 
 
 class Agent:
-    def __init__(self, symbol, step_size=0.01, epsilon=0.1):
-        self.symbol = symbol
+    def __init__(self, player='X', step_size=0.01, epsilon=0.1):
+        if player == 'X':
+            self.symbol = CROSS
+        else:
+            self.symbol = CIRCLE
         self.step_size = step_size
         self.epsilon = epsilon
 
         # Create an afterstate-value table V:hashed state->value.
         self.V = dict()
-        self.init_state_value()
+        self.init_state_values()
 
         # Memoize all states played by two players.
         self.states = []
@@ -145,11 +148,11 @@ class Agent:
 
     def init_state_values(self):
         """Init state-value table."""
-        for state in ALL_STATES_D:
-            s = state.hash
-            if s.winner == self.symbol:
+        for s in ALL_STATES_D:
+            state = ALL_STATES_D[s]
+            if state.winner == self.symbol:
                 self.V[s] = 1.0
-            elif s.winner == -self.symbol:
+            elif state.winner == -self.symbol:
                 self.V[s] = 0.0
             else:
                 self.V[s] = 0.5
