@@ -135,8 +135,9 @@ class Agent:
         # Memoize all states played by two players.
         self.states = []
 
-        # Momoize action states and their parent states & is_greedy bools.
-        self.state_parent_is_greedy_d = dict()
+        # Momoize action states and their parent states & greedy bools.
+        self.state_parent_d = dict()
+        self.state_greedy_d = dict()
 
     def init_state_values(self):
         """Init state-value table."""
@@ -181,17 +182,18 @@ class Agent:
         p = np.random.random()
         if p > self.epsilon:
             # Exploit.
-            s, v = None, -float('inf')
+            next_state, value = None, -float('inf')
             for i in range(len(next_states)):
-                s_ = next_states[i]
-                v_ = self.V[s_]
-                if v_ > v: s, v = s_, v_
+                s = next_states[i]
+                v = self.V[s_]
+                if v > state:
+                    next_state, value = s, v
             is_greedy = True
         else:
             # Explore.
-            s = np.random.choice(next_states)
+            next_state = np.random.choice(next_states)
             is_greedy = False
-        return (s, is_greedy)
+        return (next_state, is_greedy)
     
     def act(self, state):
         """Play a move from possible states given current state."""
@@ -200,10 +202,8 @@ class Agent:
 
         # Apply epsilon-greedy strategy.
         (next_state, is_greedy) = self._play_strategy(next_states)
-        self.state_parent_is_greedy_d[next_state.state] = {
-            'parent': self.states[-1],
-            'is_greedy': is_greedy
-        }
+        self.state_parent_d[next_state.state] = self.states[-1]
+        self.state_greedy_d[next_state.state] = is_greedy
         return next_state
 
     # TODO: Continue implementing tic-tac-toe.
@@ -221,4 +221,5 @@ class Agent:
     def reset_episode(self):
         """Rreset moves in a played episode."""
         self.states = []
-        self.state_parent_is_greedy_d = dict()
+        self.state_parent_d = dict()
+        self.state_greedy_d = dict()
