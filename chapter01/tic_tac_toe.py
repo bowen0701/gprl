@@ -156,10 +156,13 @@ class Agent:
                 self.V[s] = 0.0
             else:
                 self.V[s] = 0.5
-    
+
+    def save_state_values(self):
+        """Save learned state-value table."""
+        pass
+
     def load_state_values(self):
         """Load learned state-value table."""
-        self.V = None
         pass
 
     def set_state(self, state):
