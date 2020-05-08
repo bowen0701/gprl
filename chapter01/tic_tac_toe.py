@@ -240,4 +240,7 @@ class Agent:
 
     def load_state_values(self):
         """Load learned state-value table."""
-        pass
+        if self.symbol == CROSS:
+            self.V = json.load(open("state_value_x.json"))
+        else:
+            self.V = json.load(open("state_value_o.json"))
