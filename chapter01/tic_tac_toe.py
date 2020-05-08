@@ -157,14 +157,6 @@ class Agent:
             else:
                 self.V[s] = 0.5
 
-    def save_state_values(self):
-        """Save learned state-value table."""
-        pass
-
-    def load_state_values(self):
-        """Load learned state-value table."""
-        pass
-
     def set_state(self, state):
         """State the latest state."""
         self.states.append(state)
@@ -238,3 +230,14 @@ class Agent:
         self.states = []
         self.state_parent_d = dict()
         self.state_greedy_d = dict()
+
+    def save_state_values(self):
+        """Save learned state-value table."""
+        if self.symbol == CROSS:
+            json.dump(self.V, open("state_value_x.json", 'w'))
+        else:
+            json.dump(self.V, open("state_value_o.json", 'w'))
+
+    def load_state_values(self):
+        """Load learned state-value table."""
+        pass
