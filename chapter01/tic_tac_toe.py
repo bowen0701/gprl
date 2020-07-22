@@ -36,7 +36,7 @@ class State:
     
     def judge(self):
         """Judge winner and is_end based on the current state."""
-        # Iterate each row to judge winner.
+        # Check rows to judge winner.
         for r in range(BOARD_NROWS):
             row = self.board[r, :]
             symbol = row[0]
@@ -45,7 +45,7 @@ class State:
                 self.winner = symbol
                 return self
         
-        # Iterate each col to judge winner.
+        # Check columns to judge winner.
         for c in range(BOARD_NCOLS):
             col = self.board[:, c]
             symbol = col[0]
@@ -54,7 +54,7 @@ class State:
                 self.winner = symbol
                 return self
         
-        # Check 2 diagonals to judge winner.
+        # Check diagonals to judge winner.
         symbol = self.board[1][1]
         if symbol != EMPTY: 
             diag1, diag2 = [], []
