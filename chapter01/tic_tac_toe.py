@@ -36,7 +36,7 @@ class State:
     
     def judge(self):
         """Judge winner and is_end based on the current state."""
-        # Check rows to judge winner.
+        # Check rows.
         for r in range(BOARD_NROWS):
             row = self.board[r, :]
             symbol = row[0]
@@ -45,7 +45,7 @@ class State:
                 self.winner = symbol
                 return self
         
-        # Check columns to judge winner.
+        # Check columns.
         for c in range(BOARD_NCOLS):
             col = self.board[:, c]
             symbol = col[0]
@@ -54,7 +54,7 @@ class State:
                 self.winner = symbol
                 return self
         
-        # Check diagonals to judge winner.
+        # Check diagonals.
         symbol = self.board[1][1]
         if symbol != EMPTY: 
             diag1, diag2 = [], []
@@ -83,6 +83,7 @@ class State:
         return next_state
 
     def show_board(self):
+        """Show board."""
         board = self.board.tolist()
         for r in range(BOARD_NROWS):
             for c in range(BOARD_NCOLS):
@@ -140,7 +141,7 @@ class Agent:
         # Memoize all states played by two players.
         self.states = []
 
-        # Momoize action states and their parent states & greedy bools.
+        # Memoize action states and their parent states & greedy bools.
         # - state_parent_d:hashed state->parent state.
         # - state_greedy_d:hashed state->is greedy.
         self.state_parent_d = dict()
@@ -199,7 +200,7 @@ class Agent:
             is_greedy = False
         return (next_state, is_greedy)
     
-    def act(self):
+    def play(self):
         """Play a move from possible states given current state."""
         # Get possible moves given a state by replacing EMPTY cells.
         next_states = self._get_possible_moves()
@@ -226,7 +227,7 @@ class Agent:
             self.V[s_before] += self.step_size * (self.V[s] - self.V[s_before])
 
     def reset_episode(self):
-        """Rreset moves in a played episode."""
+        """Reset moves in a played episode."""
         self.states = []
         self.state_parent_d = dict()
         self.state_greedy_d = dict()
