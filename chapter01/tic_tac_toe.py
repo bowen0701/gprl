@@ -125,6 +125,9 @@ def get_all_states():
     return states_d
 
 
+ALL_STATES_D = get_all_states()
+
+
 class Agent:
     def __init__(self, player='X', step_size=0.01, epsilon=0.1):
         if player == 'X':
