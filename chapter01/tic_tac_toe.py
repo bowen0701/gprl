@@ -26,7 +26,7 @@ def unhash(state):
     return np.fromstring(state, dtype=int, sep=',')
 
 
-class State:
+class Environment(object):
     def __init__(self):
         self.board = (np.array([EMPTY] * BOARD_SIZE)
                         .reshape((BOARD_NROWS, BOARD_NCOLS)))
@@ -128,7 +128,7 @@ def get_all_states():
 ALL_STATES_D = get_all_states()
 
 
-class Agent:
+class Agent(object):
     def __init__(self, player='X', step_size=0.01, epsilon=0.1):
         if player == 'X':
             self.symbol = CROSS
