@@ -30,7 +30,7 @@ class Environment(object):
     def __init__(self):
         self.board = (np.array([EMPTY] * BOARD_SIZE)
                         .reshape((BOARD_NROWS, BOARD_NCOLS)))
-        self.hash = hash(self.board)
+        self.state = hash(self.board)
         self.is_end = False
         self.winner = None
     
@@ -55,7 +55,8 @@ class Environment(object):
                 return self
         
         # Check diagonals.
-        symbol = self.board[1][1]
+        mid = BOARD_NROWS // 2
+        symbol = self.board[mid][mid]
         if symbol != EMPTY: 
             diag1, diag2 = [], []
             for i in range(BOARD_NROWS):
@@ -75,12 +76,10 @@ class Environment(object):
 
     def set_next_state(self, r, c, symbol):
         """Create the next state at position (r, c)."""
-        next_state = State()
-        next_state.board = self.board.copy()
-        next_state.board[r][c] = symbol
-        next_state.hash = hash(next_state.board)
-        next_state.judge()
-        return next_state
+        self.board[r][c] = symbol
+        self.state = hash(self.board)
+        self.judge()
+        return self
 
     def show_board(self):
         """Show board."""
@@ -98,14 +97,15 @@ class Environment(object):
         [print(board[r]) for r in range(BOARD_NROWS)]
 
 
+# TODO: Update get_all_state() with Environment class.
 def _dfs_states(cur_symbol, cur_state, states_d):
     """DFS for next state by recursion."""
     for r in range(BOARD_NROWS):
         for c in range(BOARD_NCOLS):
             if cur_state.board[r][c] == EMPTY:
                 next_state = cur_state.set_next_state(r, c, cur_symbol)
-                if next_state.hash not in states_d:
-                    states_d[next_state.hash] = next_state
+                if next_state.state not in states_d:
+                    states_d[next_state.state] = next_state
 
                     # If game is not ended, continue DFS.
                     if not next_state.is_end:
@@ -118,9 +118,9 @@ def get_all_states():
     cur_symbol = CROSS
     cur_state = State()
 
-    # Create a dict states_d:hashed state->state object.
+    # Create a dict states_d:state->state object.
     states_d = dict()
-    states_d[cur_state.hash] = cur_state
+    states_d[cur_state.state] = cur_state
     _dfs_states(cur_symbol, cur_state, states_d)
     return states_d
 
@@ -192,7 +192,7 @@ class Agent(object):
             next_state, value = None, -float('inf')
             for i in range(len(next_states)):
                 _next_state = next_states[i]
-                s = _next_state.hash
+                s = _next_state.state
                 v = self.V[s]
                 if v > value:
                     next_state, value = _next_state, v
@@ -210,7 +210,7 @@ class Agent(object):
 
         # Apply epsilon-greedy strategy.
         (next_state, is_greedy) = self._play_strategy(next_states)
-        s = next_state.hash
+        s = next_state.state
         self.state_parent_d[s] = self.states[-1]
         self.state_greedy_d[s] = is_greedy
         return next_state
@@ -223,7 +223,7 @@ class Agent(object):
         where a is the step size, and V(S_t) is the state-value function
         at time step t.
         """
-        s = state.hash
+        s = state.state
         s_before = self.state_parent_d[s].hash
         is_greedy = self.state_greedy_d[s]
         if is_greedy:
