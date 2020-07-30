@@ -105,28 +105,28 @@ class Environment(object):
         return env_copy
 
 
-# TODO: Update get_all_state() with Environment class.
 def _dfs_states(cur_symbol, env, all_states):
     """DFS for next state by recursion."""
     for r in range(BOARD_NROWS):
         for c in range(BOARD_NCOLS):
             if env.board[r][c] == EMPTY:
-                env.set_next_state(r, c, cur_symbol)
-                if env.state not in all_states:
-                    all_states.add(env.state)
+                env_copy = env.copy()
+                env_copy.set_next_state(r, c, cur_symbol)
+                if env_copy.state not in all_states:
+                    all_states.add(env_copy.state)
 
                     # If game is not ended, continue DFS.
-                    if not env.is_end:
-                        _dfs_states(-cur_symbol, env, all_states)
+                    if not env_copy.is_end:
+                        _dfs_states(-cur_symbol, env_copy, all_states)
 
 
 def get_all_states():
     """Get all states from the init state."""
     # The player who plays first always uses 'X'.
     cur_symbol = CROSS
-    env = Environment()
 
     # Create a set for all states.
+    env = Environment()
     all_states = set()
     all_states.add(env.state)
     _dfs_states(cur_symbol, env, all_states)
