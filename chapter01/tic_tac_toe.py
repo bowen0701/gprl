@@ -95,37 +95,45 @@ class Environment(object):
 
         print('Board: is_end={}, winner={}'.format(self.is_end, self.winner))
         [print(board[r]) for r in range(BOARD_NROWS)]
+    
+    def copy(self):
+        env_copy = Environment()
+        env_copy.board = self.board.copy()
+        env_copy.state = self.state
+        env_copy.is_end = self.is_end
+        env_copy.winner = self.winner
+        return env_copy
 
 
 # TODO: Update get_all_state() with Environment class.
-def _dfs_states(cur_symbol, cur_state, states_d):
+def _dfs_states(cur_symbol, env, all_states):
     """DFS for next state by recursion."""
     for r in range(BOARD_NROWS):
         for c in range(BOARD_NCOLS):
-            if cur_state.board[r][c] == EMPTY:
-                next_state = cur_state.set_next_state(r, c, cur_symbol)
-                if next_state.state not in states_d:
-                    states_d[next_state.state] = next_state
+            if env.board[r][c] == EMPTY:
+                env.set_next_state(r, c, cur_symbol)
+                if env.state not in all_states:
+                    all_states.add(env.state)
 
                     # If game is not ended, continue DFS.
-                    if not next_state.is_end:
-                        _dfs_states(-cur_symbol, next_state, states_d)
+                    if not env.is_end:
+                        _dfs_states(-cur_symbol, env, all_states)
 
 
 def get_all_states():
     """Get all states from the init state."""
     # The player who plays first always uses 'X'.
     cur_symbol = CROSS
-    cur_state = State()
+    env = Environment()
 
-    # Create a dict states_d:state->state object.
-    states_d = dict()
-    states_d[cur_state.state] = cur_state
-    _dfs_states(cur_symbol, cur_state, states_d)
-    return states_d
+    # Create a set for all states.
+    all_states = set()
+    all_states.add(env.state)
+    _dfs_states(cur_symbol, env, all_states)
+    return all_states
 
 
-ALL_STATES_D = get_all_states()
+ALL_STATES = get_all_states()
 
 
 class Agent(object):
@@ -152,7 +160,7 @@ class Agent(object):
 
     def init_state_values(self):
         """Init state-value table."""
-        for s in ALL_STATES_D:
+        for s in ALL_STATES:
             state = ALL_STATES_D[s]
             if state.winner == self.symbol:
                 self.V[s] = 1.0
