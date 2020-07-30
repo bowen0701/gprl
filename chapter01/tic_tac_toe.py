@@ -152,16 +152,16 @@ class Agent(object):
         # Memoize all states played by two players.
         self.states = []
 
-        # Memoize action states and their parent states & greedy bools.
-        # - state_parent_d:hashed state->parent state.
-        # - state_greedy_d:hashed state->is greedy.
-        self.state_parent_d = dict()
-        self.state_greedy_d = dict()
+        # Momoize action states's parent states & greedy bools.
+        # - state_parent:hashed state->parent state.
+        # - state_isgreedy:hashed state->is greedy.
+        self.state_parent = dict()
+        self.state_isgreedy = dict()
 
     def init_state_values(self):
         """Init state-value table."""
         for s in ALL_STATES:
-            state = ALL_STATES_D[s]
+            state = ALL_STATES[s]
             if state.winner == self.symbol:
                 self.V[s] = 1.0
             elif state.winner == -self.symbol:
@@ -200,7 +200,7 @@ class Agent(object):
             next_state, value = None, -float('inf')
             for i in range(len(next_states)):
                 _next_state = next_states[i]
-                s = _next_state.state
+                s = _next_state.hash
                 v = self.V[s]
                 if v > value:
                     next_state, value = _next_state, v
@@ -211,16 +211,16 @@ class Agent(object):
             is_greedy = False
         return (next_state, is_greedy)
     
-    def play(self):
+    def act(self):
         """Play a move from possible states given current state."""
         # Get possible moves given a state by replacing EMPTY cells.
         next_states = self._get_possible_moves()
 
         # Apply epsilon-greedy strategy.
         (next_state, is_greedy) = self._play_strategy(next_states)
-        s = next_state.state
-        self.state_parent_d[s] = self.states[-1]
-        self.state_greedy_d[s] = is_greedy
+        s = next_state.hash
+        self.state_parent[s] = self.states[-1]
+        self.state_isgreedy[s] = is_greedy
         return next_state
 
     def backup_value(self, state, reward):
@@ -231,17 +231,17 @@ class Agent(object):
         where a is the step size, and V(S_t) is the state-value function
         at time step t.
         """
-        s = state.state
-        s_before = self.state_parent_d[s].hash
-        is_greedy = self.state_greedy_d[s]
+        s = state.hash
+        s_before = self.state_parent[s].hash
+        is_greedy = self.state_isgreedy[s]
         if is_greedy:
             self.V[s_before] += self.step_size * (self.V[s] - self.V[s_before])
 
     def reset_episode(self):
-        """Reset moves in a played episode."""
+        """Rreset moves in a played episode."""
         self.states = []
-        self.state_parent_d = dict()
-        self.state_greedy_d = dict()
+        self.state_parent = dict()
+        self.state_isgreedy = dict()
 
     def save_state_values(self):
         """Save learned state-value table."""
