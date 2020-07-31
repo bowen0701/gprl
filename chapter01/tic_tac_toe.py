@@ -170,7 +170,7 @@ class Agent(object):
                 self.V[s] = 0.5
 
     def set_state(self, state):
-        """State the latest state."""
+        """Set the latest state."""
         self.states.append(state)
 
     def _get_possible_moves(self):
@@ -200,7 +200,7 @@ class Agent(object):
             next_state, value = None, -float('inf')
             for i in range(len(next_states)):
                 _next_state = next_states[i]
-                s = _next_state.hash
+                s = _next_state.state
                 v = self.V[s]
                 if v > value:
                     next_state, value = _next_state, v
@@ -218,7 +218,7 @@ class Agent(object):
 
         # Apply epsilon-greedy strategy.
         (next_state, is_greedy) = self._play_strategy(next_states)
-        s = next_state.hash
+        s = next_state.state
         self.state_parent[s] = self.states[-1]
         self.state_isgreedy[s] = is_greedy
         return next_state
@@ -231,8 +231,8 @@ class Agent(object):
         where a is the step size, and V(S_t) is the state-value function
         at time step t.
         """
-        s = state.hash
-        s_before = self.state_parent[s].hash
+        s = state.state
+        s_before = self.state_parent[s].state
         is_greedy = self.state_isgreedy[s]
         if is_greedy:
             self.V[s_before] += self.step_size * (self.V[s] - self.V[s_before])
