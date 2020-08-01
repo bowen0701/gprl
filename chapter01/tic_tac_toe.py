@@ -145,7 +145,7 @@ class Agent(object):
         self.step_size = step_size
         self.epsilon = epsilon
 
-        # Create an afterstate-value table V:hashed state->value.
+        # Create an afterstate-value table V: state->value.
         self.V = dict()
         self.init_state_values()
 
@@ -153,8 +153,8 @@ class Agent(object):
         self.states = []
 
         # Momoize action states's parent states & greedy bools.
-        # - state_parent:hashed state->parent state.
-        # - state_isgreedy:hashed state->is greedy.
+        # - state_parent: state->parent state.
+        # - state_isgreedy: state->is greedy.
         self.state_parent = dict()
         self.state_isgreedy = dict()
 
