@@ -34,17 +34,19 @@ class Environment(object):
         self.state = hash(self.board)
         self.winner = None
 
-    def get_actions(self):
-        """Get possible actions given current state."""
-        actions = []
+    def get_actions(self, symbol):
+        """Get possible action states given current board."""
+        action_states = []
         for r in range(BOARD_NROWS):
             for c in range(BOARD_NCOLS):
                 if self.board[r][c] == EMPTY:
-                    actions.append((r, c))
-        return actions
+                    env_copy = self.copy()
+                    env_copy.board[r][c] = symbol
+                    action_states.append(hash(env_copy.board))
+        return action_states
 
     def _judge(self):
-        """Judge winner based on the current state."""
+        """Judge winner based on the current board."""
         # Check rows.
         for r in range(BOARD_NROWS):
             row = self.board[r, :]
@@ -78,17 +80,13 @@ class Environment(object):
     def is_done(self):
         return self.steps_left == 0
 
-    def step(self, r, c, symbol):
-        """Take next step at position (r, c) for symbol."""
-        self.board[r][c] = symbol
-        self.state = hash(self.board)
+    def step(self, state, symbol):
+        """Take next step as state with symbol."""
+        self.state = state
+        self.board = unhash(self.state)
         self._judge()
         self.steps_left -= 1
-        if self.winner != EMPTY:
-            reward = 1
-        else:
-            reward = 0
-        return self.state, reward, self.is_done(), self.winner
+        return self.state, self.is_done(), self.winner
 
     def copy(self):
         env_copy = Environment()
