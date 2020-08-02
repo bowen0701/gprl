@@ -28,20 +28,28 @@ def unhash(state):
 
 class Environment(object):
     def __init__(self):
+        self.steps_left = BOARD_SIZE
         self.board = (np.array([EMPTY] * BOARD_SIZE)
                         .reshape((BOARD_NROWS, BOARD_NCOLS)))
         self.state = hash(self.board)
-        self.is_end = False
         self.winner = None
-    
-    def judge(self):
-        """Judge winner and is_end based on the current state."""
+
+    def get_actions(self):
+        """Get possible actions given current state."""
+        actions = []
+        for r in range(BOARD_NROWS):
+            for c in range(BOARD_NCOLS):
+                if self.board[r][c] == EMPTY:
+                    actions.append((r, c))
+        return actions
+
+    def _judge(self):
+        """Judge winner based on the current state."""
         # Check rows.
         for r in range(BOARD_NROWS):
             row = self.board[r, :]
             symbol = row[0]
             if symbol != EMPTY and np.sum(row) == symbol * NMARKS:
-                self.is_end = True
                 self.winner = symbol
                 return self
         
@@ -50,7 +58,6 @@ class Environment(object):
             col = self.board[:, c]
             symbol = col[0]
             if symbol != EMPTY and np.sum(col) == symbol * NMARKS:
-                self.is_end = True
                 self.winner = symbol
                 return self
         
@@ -65,21 +72,23 @@ class Environment(object):
 
             diag1, diag2 = np.array(diag1), np.array(diag1)
             if np.sum(diag1) == symbol * NMARKS or np.sum(diag2) == symbol:
-                self.is_end = True
                 self.winner = symbol
                 return self
 
-        # Judge tie with no winner.
-        if np.sum(np.abs(self.board)) == BOARD_SIZE:
-            self.is_end = True
-            return self
+    def is_done(self):
+        return self.steps_left == 0
 
-    def set_next_state(self, r, c, symbol):
-        """Create the next state at position (r, c)."""
+    def step(self, r, c, symbol):
+        """Take next step at position (r, c) for symbol."""
         self.board[r][c] = symbol
         self.state = hash(self.board)
-        self.judge()
-        return self
+        self._judge()
+        self.steps_left -= 1
+        if self.winner != EMPTY:
+            reward = 1
+        else:
+            reward = 0
+        return self.state, reward, self.is_done(), self.winner
 
     def show_board(self):
         """Show board."""
@@ -93,14 +102,16 @@ class Environment(object):
                 else:
                     board[r][c] = ' '
 
-        print('Board: is_end={}, winner={}'.format(self.is_end, self.winner))
-        [print(board[r]) for r in range(BOARD_NROWS)]
-    
-    def copy(self):
+        print('Board: is_done={}, winner={}'
+              .format(self.is_done(), self.winner))
+        for r in range(BOARD_NROWS):
+            print(board[r])
+
+    def _copy(self):
         env_copy = Environment()
+        env_copy.steps_left = self.steps_left
         env_copy.board = self.board.copy()
         env_copy.state = self.state
-        env_copy.is_end = self.is_end
         env_copy.winner = self.winner
         return env_copy
 
@@ -116,7 +127,7 @@ def _dfs_states(cur_symbol, env, all_states):
                     all_states.add(env_copy.state)
 
                     # If game is not ended, continue DFS.
-                    if not env_copy.is_end:
+                    if not env_copy.is_done:
                         _dfs_states(-cur_symbol, env_copy, all_states)
 
 
@@ -172,18 +183,6 @@ class Agent(object):
     def set_state(self, state):
         """Set the latest state."""
         self.states.append(state)
-
-    def _get_possible_moves(self):
-        """Get possible moves from possible states given current state."""
-        state = self.states[-1]
-        next_states = []
-
-        for r in range(BOARD_NROWS):
-            for c in range(BOARD_NCOLS):
-                if state.board[r][c] == EMPTY:
-                    next_state = state.set_next_state(r, c, self.symbol)
-                    next_states.append(next_state)
-        return next_states
 
     def _play_strategy(self, next_states):
         """Play with strategy. Here we use epsilon-greedy strategy.
