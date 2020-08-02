@@ -23,8 +23,8 @@ def hash(board):
 
 
 def unhash(state):
-    return np.fromstring(state, dtype=int, sep=',')
-
+    return (np.fromstring(state, dtype=int, sep=',')
+              .reshape((BOARD_NROWS, BOARD_NCOLS)))
 
 class Environment(object):
     def __init__(self):
@@ -90,6 +90,14 @@ class Environment(object):
             reward = 0
         return self.state, reward, self.is_done(), self.winner
 
+    def copy(self):
+        env_copy = Environment()
+        env_copy.steps_left = self.steps_left
+        env_copy.board = self.board.copy()
+        env_copy.state = self.state
+        env_copy.winner = self.winner
+        return env_copy
+
     def show_board(self):
         """Show board."""
         board = self.board.tolist()
@@ -107,28 +115,20 @@ class Environment(object):
         for r in range(BOARD_NROWS):
             print(board[r])
 
-    def _copy(self):
-        env_copy = Environment()
-        env_copy.steps_left = self.steps_left
-        env_copy.board = self.board.copy()
-        env_copy.state = self.state
-        env_copy.winner = self.winner
-        return env_copy
 
-
-def _dfs_states(cur_symbol, env, all_states):
+def _dfs_states(cur_symbol, env, all_state_envs):
     """DFS for next state by recursion."""
     for r in range(BOARD_NROWS):
         for c in range(BOARD_NCOLS):
             if env.board[r][c] == EMPTY:
                 env_copy = env.copy()
-                env_copy.set_next_state(r, c, cur_symbol)
-                if env_copy.state not in all_states:
-                    all_states.add(env_copy.state)
+                env_copy.step(r, c, cur_symbol)
+                if env_copy.state not in all_state_envs:
+                    all_state_envs[env_copy.state] = env_copy
 
                     # If game is not ended, continue DFS.
                     if not env_copy.is_done:
-                        _dfs_states(-cur_symbol, env_copy, all_states)
+                        _dfs_states(-cur_symbol, env_copy, all_state_envs)
 
 
 def get_all_states():
@@ -138,13 +138,13 @@ def get_all_states():
 
     # Create a set for all states.
     env = Environment()
-    all_states = set()
-    all_states.add(env.state)
-    _dfs_states(cur_symbol, env, all_states)
-    return all_states
+    all_state_envs = dict()
+    all_state_envs[env.state] = env
+    _dfs_states(cur_symbol, env, all_state_envs)
+    return all_state_envs
 
 
-ALL_STATES = get_all_states()
+ALL_STATE_ENV = get_all_states()
 
 
 class Agent(object):
