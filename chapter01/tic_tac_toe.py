@@ -35,15 +35,13 @@ class Environment(object):
         self.winner = None
 
     def get_actions(self, symbol):
-        """Get possible action states given current board."""
-        action_states = []
+        """Get possible action positions given current board."""
+        action_positions = dict()
         for r in range(BOARD_NROWS):
             for c in range(BOARD_NCOLS):
                 if self.board[r][c] == EMPTY:
-                    env_copy = self.copy()
-                    env_copy.step(r, c, symbol)
-                    action_states.append(env_copy.state)
-        return action_states
+                    action_positions.append((r, c))
+        return action_positions
 
     def _judge(self):
         """Judge winner based on the current board."""
@@ -156,68 +154,67 @@ class Agent(object):
 
         # Create an afterstate-value table V: state->value.
         self.V = dict()
-        self.init_state_values()
+        self.init_state_value_table()
 
         # Memoize all states played by two players.
-        self.states = []
 
-        # Momoize action states's parent states & greedy bools.
-        # - state_parent: state->parent state.
-        # - state_isgreedy: state->is greedy.
+        # Momoize action state, its parent state & greedy bool.
+        self.states = []
         self.state_parent = dict()
         self.state_isgreedy = dict()
 
-    def init_state_values(self):
+    def init_state_value_table(self):
         """Init state-value table."""
-        for s in ALL_STATES:
-            state = ALL_STATES[s]
-            if state.winner == self.symbol:
+        for s in ALL_STATE_ENV:
+            env = ALL_STATE_ENV[s]
+            if env.winner == self.symbol:
                 self.V[s] = 1.0
-            elif state.winner == -self.symbol:
+            elif env.winner == -self.symbol:
                 self.V[s] = 0.0
             else:
                 self.V[s] = 0.5
 
-    def set_state(self, state):
-        """Set the latest state."""
-        self.states.append(state)
-
-    def _play_strategy(self, next_states):
+    def _play_strategy(self, action_positions, env):
         """Play with strategy. Here we use epsilon-greedy strategy.
 
         Epsilon-greedy strategy: 
-        - Take exploratory moves in the p% of times. 
-        - Take greedy moves in the (100-p)% of times.
+          - Take exploratory moves in the p% of times. 
+          - Take greedy moves in the (100-p)% of times.
         where p% is epsilon. 
         If epsilon is zero, then use the greedy strategy.
         """
         p = np.random.random()
         if p > self.epsilon:
             # Exploit.
-            next_state, value = None, -float('inf')
-            for i in range(len(next_states)):
-                _next_state = next_states[i]
-                s = _next_state.state
+            next_r, next_c, next_state = None, None, None
+            value = -float('inf')
+            for (r, c) in action_positions:
+                env_copy = env.copy()
+                env_copy.step(r, c, self.symbol)
+                s = env_copy.state
                 v = self.V[s]
                 if v > value:
-                    next_state, value = _next_state, v
+                    next_r, next_c, next_state = r, c, s
             is_greedy = True
         else:
             # Explore.
-            next_state = np.random.choice(next_states)
+            (next_r, next_c) = np.random.choice(action_positions)
+            env_copy = env.copy()
+            env_copy.step(next_r, next_c, self.symbol)
+            next_state = env_copy.state
             is_greedy = False
-        return (next_state, is_greedy)
+        return (next_r, next_c, next_state, is_greedy)
     
-    def act(self):
+    def act(self, env):
         """Play a move from possible states given current state."""
-        # Get possible moves given a state by replacing EMPTY cells.
-        next_states = self._get_possible_moves()
+        # Get possible actions from environment.
+        action_positions = env.get_actions(self.symbol)
 
         # Apply epsilon-greedy strategy.
-        (next_state, is_greedy) = self._play_strategy(next_states)
-        s = next_state.state
-        self.state_parent[s] = self.states[-1]
-        self.state_isgreedy[s] = is_greedy
+        (next_r, next_c, next_state, is_greedy) = self._play_strategy(action_positions)
+        self.state_parent[next_state] = self.states[-1]
+        self.state_isgreedy[next_state] = is_greedy
+        self.states.append(next_state)
         return next_state
 
     def backup_value(self, state, reward):
