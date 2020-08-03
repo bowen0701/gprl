@@ -41,8 +41,8 @@ class Environment(object):
             for c in range(BOARD_NCOLS):
                 if self.board[r][c] == EMPTY:
                     env_copy = self.copy()
-                    env_copy.board[r][c] = symbol
-                    action_states.append(hash(env_copy.board))
+                    env_copy.step(r, c, symbol)
+                    action_states.append(env_copy.state)
         return action_states
 
     def _judge(self):
@@ -80,10 +80,10 @@ class Environment(object):
     def is_done(self):
         return self.steps_left == 0
 
-    def step(self, state, symbol):
+    def step(self, r, c, symbol):
         """Take next step as state with symbol."""
-        self.state = state
-        self.board = unhash(self.state)
+        self.board[r][c] = symbol
+        self.state = hash(self.board)
         self._judge()
         self.steps_left -= 1
         return self.state, self.is_done(), self.winner
@@ -125,7 +125,7 @@ def _dfs_states(cur_symbol, env, all_state_envs):
                     all_state_envs[env_copy.state] = env_copy
 
                     # If game is not ended, continue DFS.
-                    if not env_copy.is_done:
+                    if not env_copy.is_done():
                         _dfs_states(-cur_symbol, env_copy, all_state_envs)
 
 
@@ -134,7 +134,7 @@ def get_all_states():
     # The player who plays first always uses 'X'.
     cur_symbol = CROSS
 
-    # Create a set for all states.
+    # Apply DFS to collect all states.
     env = Environment()
     all_state_envs = dict()
     all_state_envs[env.state] = env
