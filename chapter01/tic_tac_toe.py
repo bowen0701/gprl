@@ -34,15 +34,6 @@ class Environment(object):
         self.state = hash(self.board)
         self.winner = None
 
-    def get_actions(self, symbol):
-        """Get possible action positions given current board."""
-        action_positions = dict()
-        for r in range(BOARD_NROWS):
-            for c in range(BOARD_NCOLS):
-                if self.board[r][c] == EMPTY:
-                    action_positions.append((r, c))
-        return action_positions
-
     def _judge(self):
         """Judge winner based on the current board."""
         # Check rows.
@@ -160,8 +151,8 @@ class Agent(object):
 
         # Momoize action state, its parent state & greedy bool.
         self.states = []
-        self.state_parent = dict()
-        self.state_isgreedy = dict()
+        self.state_parent_d = dict()
+        self.state_isgreedy_d = dict()
 
     def init_state_value_table(self):
         """Init state-value table."""
@@ -173,6 +164,15 @@ class Agent(object):
                 self.V[s] = 0.0
             else:
                 self.V[s] = 0.5
+
+    def _get_actions(self, env, symbol):
+        """Get possible action positions given current board."""
+        action_positions = dict()
+        for r in range(BOARD_NROWS):
+            for c in range(BOARD_NCOLS):
+                if env.board[r][c] == EMPTY:
+                    action_positions[(r, c)] = env_copy
+        return action_positions
 
     def _play_strategy(self, action_positions, env):
         """Play with strategy. Here we use epsilon-greedy strategy.
@@ -208,14 +208,15 @@ class Agent(object):
     def act(self, env):
         """Play a move from possible states given current state."""
         # Get possible actions from environment.
-        action_positions = env.get_actions(self.symbol)
+        action_positions = self._get_actions(env, self.symbol)
 
         # Apply epsilon-greedy strategy.
-        (next_r, next_c, next_state, is_greedy) = self._play_strategy(action_positions)
-        self.state_parent[next_state] = self.states[-1]
-        self.state_isgreedy[next_state] = is_greedy
+        (next_r, next_c, next_state, is_greedy) = self._play_strategy(
+            action_positions)
+        self.state_parent_d[next_state] = self.states[-1]
+        self.state_isgreedy_d[next_state] = is_greedy
         self.states.append(next_state)
-        return next_state
+        return next_r, next_c, self.symbol
 
     def backup_value(self, state, reward):
         """Back up value by a temporal-difference learning after a greedy move.
