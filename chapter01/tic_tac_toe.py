@@ -26,13 +26,14 @@ def unhash(state):
     return (np.fromstring(state, dtype=int, sep=',')
               .reshape((BOARD_NROWS, BOARD_NCOLS)))
 
+# TODO: Refactor Environment's step() to return next_env.
 class Environment(object):
     def __init__(self):
         self.steps_left = BOARD_SIZE
         self.board = (np.array([EMPTY] * BOARD_SIZE)
                         .reshape((BOARD_NROWS, BOARD_NCOLS)))
         self.state = hash(self.board)
-        self.winner = None
+        self.winner = EMPTY
 
     def _judge(self):
         """Judge winner based on the current board."""
@@ -62,7 +63,7 @@ class Environment(object):
                 diag2.append(self.board[i][BOARD_NROWS - i - 1])
 
             diag1, diag2 = np.array(diag1), np.array(diag1)
-            if np.sum(diag1) == symbol * NMARKS or np.sum(diag2) == symbol:
+            if np.sum(diag1) == symbol * NMARKS or np.sum(diag2) == symbol * NMARKS:
                 self.winner = symbol
                 return self
 
@@ -149,9 +150,7 @@ class Agent(object):
         self.V = dict()
         self.init_state_value_table()
 
-        # Memoize all states played by two players.
-
-        # Momoize action state, its parent state & greedy bool.
+        # Memoize action state, its parent state & is_greedy bool.
         self.states = []
         self.state_parent_d = dict()
         self.state_isgreedy_d = dict()
@@ -169,14 +168,14 @@ class Agent(object):
 
     def _get_actions(self, env, symbol):
         """Get possible action positions given current board."""
-        action_positions = dict()
+        next_positions = []
         for r in range(BOARD_NROWS):
             for c in range(BOARD_NCOLS):
                 if env.board[r][c] == EMPTY:
-                    action_positions[(r, c)] = env_copy
-        return action_positions
+                    next_positions.append((r, c))
+        return next_positions
 
-    def _play_strategy(self, env, action_positions):
+    def _play_strategy(self, env, next_positions):
         """Play with strategy. Here we use epsilon-greedy strategy.
 
         Epsilon-greedy strategy: 
@@ -190,37 +189,35 @@ class Agent(object):
             # Exploit.
             next_r, next_c, next_state = None, None, None
             value = -float('inf')
-            for (r, c) in action_positions:
-                env_copy = env.copy()
-                env_copy.step(r, c, self.symbol)
-                s = env_copy.state
+            for (r, c) in next_positions:
+                next_env = env.step(r, c, self.symbol)
+                s = next_env.state
                 v = self.V[s]
                 if v > value:
                     next_r, next_c, next_state = r, c, s
             is_greedy = True
         else:
             # Explore.
-            (next_r, next_c) = np.random.choice(action_positions)
-            env_copy = env.copy()
-            env_copy.step(next_r, next_c, self.symbol)
-            next_state = env_copy.state
+            (next_r, next_c) = np.random.choice(next_positions)
+            next_env = env.step(next_r, next_c, self.symbol)
+            next_state = next_env.state
             is_greedy = False
         return (next_r, next_c, next_state, is_greedy)
     
-    def act(self, env):
+    def play(self, env):
         """Play a move from possible states given current state."""
-        # Get possible actions from environment.
-        action_positions = self._get_actions(env, self.symbol)
+        # Get next actions from environment.
+        next_positions = self._get_actions(env, self.symbol)
 
         # Apply epsilon-greedy strategy.
         (next_r, next_c, next_state, is_greedy) = self._play_strategy(
-            env, action_positions)
+            env, next_positions)
         self.state_parent_d[next_state] = self.states[-1]
         self.state_isgreedy_d[next_state] = is_greedy
         self.states.append(next_state)
         return next_r, next_c, self.symbol
 
-    def backup_value(self, state, reward):
+    def backup_value(self):
         """Back up value by a temporal-difference learning after a greedy move.
         
         Temporal-difference learning:
@@ -228,26 +225,26 @@ class Agent(object):
         where a is the step size, and V(S_t) is the state-value function
         at time step t.
         """
-        s = state.state
-        s_before = self.state_parent[s].state
-        is_greedy = self.state_isgreedy[s]
+        s = self.states[-1]
+        s_parent = self.state_parent_d[s]
+        is_greedy = self.state_isgreedy_d[s]
         if is_greedy:
-            self.V[s_before] += self.step_size * (self.V[s] - self.V[s_before])
+            self.V[s_parent] += self.step_size * (self.V[s] - self.V[s_parent])
 
     def reset_episode(self):
         """Rreset moves in a played episode."""
         self.states = []
-        self.state_parent = dict()
-        self.state_isgreedy = dict()
+        self.state_parent_d = dict()
+        self.state_isgreedy_d = dict()
 
-    def save_state_values(self):
+    def save_state_value_table(self):
         """Save learned state-value table."""
         if self.symbol == CROSS:
             json.dump(self.V, open("state_value_x.json", 'w'))
         else:
             json.dump(self.V, open("state_value_o.json", 'w'))
 
-    def load_state_values(self):
+    def load_state_value_table(self):
         """Load learned state-value table."""
         if self.symbol == CROSS:
             self.V = json.load(open("state_value_x.json"))
