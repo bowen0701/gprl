@@ -67,10 +67,11 @@ class Environment(object):
                 return self
 
     def is_done(self):
+        """Check the game is done."""
         return self.steps_left == 0
 
     def step(self, r, c, symbol):
-        """Take next step as state with symbol."""
+        """Take a step with symbol."""
         self.board[r][c] = symbol
         self.state = hash(self.board)
         self._judge()
@@ -79,6 +80,7 @@ class Environment(object):
         return env_copy
 
     def _copy(self):
+        """Copy to a new Environment instance."""
         env_copy = Environment()
         env_copy.steps_left = self.steps_left
         env_copy.board = self.board.copy()
