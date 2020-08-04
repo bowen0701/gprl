@@ -75,9 +75,10 @@ class Environment(object):
         self.state = hash(self.board)
         self._judge()
         self.steps_left -= 1
-        return self.state, self.is_done(), self.winner
+        env_copy = self._copy()
+        return env_copy
 
-    def copy(self):
+    def _copy(self):
         env_copy = Environment()
         env_copy.steps_left = self.steps_left
         env_copy.board = self.board.copy()
@@ -108,14 +109,13 @@ def _dfs_states(cur_symbol, env, all_state_envs):
     for r in range(BOARD_NROWS):
         for c in range(BOARD_NCOLS):
             if env.board[r][c] == EMPTY:
-                env_copy = env.copy()
-                env_copy.step(r, c, cur_symbol)
-                if env_copy.state not in all_state_envs:
-                    all_state_envs[env_copy.state] = env_copy
+                env_next = env.step(r, c, cur_symbol)
+                if env_next.state not in all_state_envs:
+                    all_state_envs[env_next.state] = env_next
 
                     # If game is not ended, continue DFS.
-                    if not env_copy.is_done():
-                        _dfs_states(-cur_symbol, env_copy, all_state_envs)
+                    if not env_next.is_done():
+                        _dfs_states(-cur_symbol, env_next, all_state_envs)
 
 
 def get_all_states():
@@ -174,7 +174,7 @@ class Agent(object):
                     action_positions[(r, c)] = env_copy
         return action_positions
 
-    def _play_strategy(self, action_positions, env):
+    def _play_strategy(self, env, action_positions):
         """Play with strategy. Here we use epsilon-greedy strategy.
 
         Epsilon-greedy strategy: 
@@ -212,7 +212,7 @@ class Agent(object):
 
         # Apply epsilon-greedy strategy.
         (next_r, next_c, next_state, is_greedy) = self._play_strategy(
-            action_positions)
+            env, action_positions)
         self.state_parent_d[next_state] = self.states[-1]
         self.state_isgreedy_d[next_state] = is_greedy
         self.states.append(next_state)
