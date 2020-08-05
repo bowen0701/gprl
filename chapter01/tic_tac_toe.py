@@ -26,7 +26,7 @@ def unhash(state):
     return (np.fromstring(state, dtype=int, sep=',')
               .reshape((BOARD_NROWS, BOARD_NCOLS)))
 
-# TODO: Refactor Environment's step() to return next_env.
+
 class Environment(object):
     def __init__(self):
         self.steps_left = BOARD_SIZE
@@ -73,12 +73,12 @@ class Environment(object):
 
     def step(self, r, c, symbol):
         """Take a step with symbol."""
-        self.board[r][c] = symbol
-        self.state = hash(self.board)
-        self._judge()
-        self.steps_left -= 1
-        env_copy = self._copy()
-        return env_copy
+        env_next = self._copy()
+        env_next.board[r][c] = symbol
+        env_next.state = hash(env_next.board)
+        env_next._judge()
+        env_next.steps_left -= 1
+        return env_next
 
     def _copy(self):
         """Copy to a new Environment instance."""
@@ -107,18 +107,18 @@ class Environment(object):
             print(board[r])
 
 
-def _dfs_states(cur_symbol, env, all_state_envs):
+def _dfs_states(cur_symbol, env, all_state_env_d):
     """DFS for next state by recursion."""
     for r in range(BOARD_NROWS):
         for c in range(BOARD_NCOLS):
             if env.board[r][c] == EMPTY:
                 env_next = env.step(r, c, cur_symbol)
-                if env_next.state not in all_state_envs:
-                    all_state_envs[env_next.state] = env_next
+                if env_next.state not in all_state_env_d:
+                    all_state_env_d[env_next.state] = env_next
 
                     # If game is not ended, continue DFS.
                     if not env_next.is_done():
-                        _dfs_states(-cur_symbol, env_next, all_state_envs)
+                        _dfs_states(-cur_symbol, env_next, all_state_env_d)
 
 
 def get_all_states():
@@ -128,13 +128,13 @@ def get_all_states():
 
     # Apply DFS to collect all states.
     env = Environment()
-    all_state_envs = dict()
-    all_state_envs[env.state] = env
-    _dfs_states(cur_symbol, env, all_state_envs)
-    return all_state_envs
+    all_state_env_d = dict()
+    all_state_env_d[env.state] = env
+    _dfs_states(cur_symbol, env, all_state_env_d)
+    return all_state_env_d
 
 
-ALL_STATE_ENV = get_all_states()
+ALL_STATE_ENV_DICT = get_all_states()
 
 
 class Agent(object):
@@ -157,8 +157,8 @@ class Agent(object):
 
     def init_state_value_table(self):
         """Init state-value table."""
-        for s in ALL_STATE_ENV:
-            env = ALL_STATE_ENV[s]
+        for s in ALL_STATE_ENV_DICT:
+            env = ALL_STATE_ENV_DICT[s]
             if env.winner == self.symbol:
                 self.V[s] = 1.0
             elif env.winner == -self.symbol:
@@ -168,14 +168,14 @@ class Agent(object):
 
     def _get_actions(self, env, symbol):
         """Get possible action positions given current board."""
-        next_positions = []
+        positions = []
         for r in range(BOARD_NROWS):
             for c in range(BOARD_NCOLS):
                 if env.board[r][c] == EMPTY:
-                    next_positions.append((r, c))
-        return next_positions
+                    positions.append((r, c))
+        return positions
 
-    def _play_strategy(self, env, next_positions):
+    def _play_strategy(self, env, positions):
         """Play with strategy. Here we use epsilon-greedy strategy.
 
         Epsilon-greedy strategy: 
@@ -187,35 +187,36 @@ class Agent(object):
         p = np.random.random()
         if p > self.epsilon:
             # Exploit.
-            next_r, next_c, next_state = None, None, None
+            r_next, c_next, state_next = None, None, None
             value = -float('inf')
-            for (r, c) in next_positions:
-                next_env = env.step(r, c, self.symbol)
-                s = next_env.state
+            for (r, c) in positions:
+                env_next = env.step(r, c, self.symbol)
+                s = env_next.state
                 v = self.V[s]
                 if v > value:
-                    next_r, next_c, next_state = r, c, s
+                    r_next, c_next, state_next = r, c, s
             is_greedy = True
         else:
             # Explore.
-            (next_r, next_c) = np.random.choice(next_positions)
-            next_env = env.step(next_r, next_c, self.symbol)
-            next_state = next_env.state
+            (r_next, c_next) = np.random.choice(positions)
+            env_next = env.step(r_next, c_next, self.symbol)
+            state_next = env_next.state
             is_greedy = False
-        return (next_r, next_c, next_state, is_greedy)
+        return (r_next, c_next, state_next, is_greedy)
     
     def play(self, env):
         """Play a move from possible states given current state."""
-        # Get next actions from environment.
-        next_positions = self._get_actions(env, self.symbol)
+        # Get next action positions from environment.
+        positions = self._get_actions(env, self.symbol)
 
         # Apply epsilon-greedy strategy.
-        (next_r, next_c, next_state, is_greedy) = self._play_strategy(
-            env, next_positions)
-        self.state_parent_d[next_state] = self.states[-1]
-        self.state_isgreedy_d[next_state] = is_greedy
-        self.states.append(next_state)
-        return next_r, next_c, self.symbol
+        (r_next, c_next, state_next, is_greedy) = self._play_strategy(
+            env, positions)
+
+        self.state_parent_d[state_next] = self.states[-1]
+        self.state_isgreedy_d[state_next] = is_greedy
+        self.states.append(state_next)
+        return r_next, c_next, self.symbol
 
     def backup_value(self):
         """Back up value by a temporal-difference learning after a greedy move.
