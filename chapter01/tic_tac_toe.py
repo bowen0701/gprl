@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import itertools
+import random
 
 import numpy as np
 
@@ -14,8 +15,6 @@ BOARD_SIZE = BOARD_NROWS * BOARD_NCOLS
 CROSS = 1
 CIRCLE = -1
 EMPTY = 0
-
-np.random.seed(seed=71)
 
 
 def hash(board):
@@ -208,7 +207,7 @@ class Agent(object):
             is_greedy = True
         else:
             # Explore.
-            (r_next, c_next) = np.random.choice(positions)
+            (r_next, c_next) = random.choice(positions)
             env_next = env.step(r_next, c_next, self.symbol)
             state_next = env_next.state
             is_greedy = False
