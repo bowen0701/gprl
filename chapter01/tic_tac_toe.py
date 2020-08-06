@@ -43,6 +43,7 @@ class Environment(object):
             symbol = row[0]
             if symbol != EMPTY and np.sum(row) == symbol * NMARKS:
                 self.winner = symbol
+                self.steps_left = 0
                 return self
         
         # Check columns.
@@ -51,6 +52,7 @@ class Environment(object):
             symbol = col[0]
             if symbol != EMPTY and np.sum(col) == symbol * NMARKS:
                 self.winner = symbol
+                self.steps_left = 0
                 return self
         
         # Check diagonals.
@@ -62,9 +64,10 @@ class Environment(object):
                 diag1.append(self.board[i][i])
                 diag2.append(self.board[i][BOARD_NROWS - i - 1])
 
-            diag1, diag2 = np.array(diag1), np.array(diag1)
+            diag1, diag2 = np.array(diag1), np.array(diag2)
             if np.sum(diag1) == symbol * NMARKS or np.sum(diag2) == symbol * NMARKS:
                 self.winner = symbol
+                self.steps_left = 0
                 return self
 
     def is_done(self):
@@ -76,8 +79,8 @@ class Environment(object):
         env_next = self._copy()
         env_next.board[r][c] = symbol
         env_next.state = hash(env_next.board)
-        env_next._judge()
         env_next.steps_left -= 1
+        env_next._judge()
         return env_next
 
     def _copy(self):
@@ -105,6 +108,7 @@ class Environment(object):
               .format(self.is_done(), self.winner))
         for r in range(BOARD_NROWS):
             print(board[r])
+        print('\n')
 
 
 def _dfs_states(cur_symbol, env, all_state_env_d):
@@ -138,25 +142,20 @@ ALL_STATE_ENV_DICT = get_all_states()
 
 
 class Agent(object):
-    def __init__(self, player='X', step_size=0.01, epsilon=0.1):
-        if player == 'X':
+    def __init__(self, player='X', step_size=0.01, epsilon=0.01):
+        self.player = player
+        if self.player == 'X':
             self.symbol = CROSS
-        else:
+        elif self.player == 'O':
             self.symbol = CIRCLE
+        else:
+            raise InputError("Input player should be 'X' or 'O'")
+
         self.step_size = step_size
         self.epsilon = epsilon
 
-        # Create an afterstate-value table V: state->value.
+        # Create a state-value table V.
         self.V = dict()
-        self.init_state_value_table()
-
-        # Memoize action state, its parent state & is_greedy bool.
-        self.states = []
-        self.state_parent_d = dict()
-        self.state_isgreedy_d = dict()
-
-    def init_state_value_table(self):
-        """Init state-value table."""
         for s in ALL_STATE_ENV_DICT:
             env = ALL_STATE_ENV_DICT[s]
             if env.winner == self.symbol:
@@ -165,6 +164,17 @@ class Agent(object):
                 self.V[s] = 0.0
             else:
                 self.V[s] = 0.5
+
+        # Memoize action state, its parent state & is_greedy bool.
+        self.states = []
+        self.state_parent_d = dict()
+        self.state_isgreedy_d = dict()
+
+    def reset_episode(self, env):
+        """Set up agent's init data."""
+        self.states.append(env.state)
+        self.state_parent_d[env.state] = None
+        self.state_isgreedy_d[env.state] = False
 
     def _get_actions(self, env, symbol):
         """Get possible action positions given current board."""
@@ -227,16 +237,10 @@ class Agent(object):
         at time step t.
         """
         s = self.states[-1]
-        s_parent = self.state_parent_d[s]
+        s_prev = self.state_parent_d[s]
         is_greedy = self.state_isgreedy_d[s]
         if is_greedy:
-            self.V[s_parent] += self.step_size * (self.V[s] - self.V[s_parent])
-
-    def reset_episode(self):
-        """Rreset moves in a played episode."""
-        self.states = []
-        self.state_parent_d = dict()
-        self.state_isgreedy_d = dict()
+            self.V[s_prev] += self.step_size * (self.V[s] - self.V[s_prev])
 
     def save_state_value_table(self):
         """Save learned state-value table."""
@@ -251,3 +255,59 @@ class Agent(object):
             self.V = json.load(open("state_value_x.json"))
         else:
             self.V = json.load(open("state_value_o.json"))
+
+
+def self_train(epochs, print_per_epochs=100):
+    """Self train an agent by playing games against itself."""
+    agent1 = Agent(player='X', step_size=0.01, epsilon=0.01)
+    agent2 = Agent(player='O', step_size=0.01, epsilon=0.01)
+    n_agent1_wins = 0
+    n_agent2_wins = 0
+
+    for i in range(1, epochs + 1):
+        # Reset both agents after epoch was done.
+        env = Environment()
+        print(env.steps_left, env.is_done())
+        env.show_board()
+        agent1.reset_episode(env)
+        agent2.reset_episode(env)
+
+        while not env.is_done():
+            # Agent 1 plays one step.
+            r1, c1, symbol1 = agent1.play(env)
+            print(env.steps_left, env.is_done())
+            env = env.step(r1, c1, symbol1)
+            print(env.steps_left, env.is_done())
+            env.show_board()
+            agent1.backup_value()
+
+            if env.is_done():
+                break
+
+            # Agent 2 plays the next step.
+            r2, c2, symbol2 = agent2.play(env)
+            print(env.steps_left, env.is_done())
+            env = env.step(r2, c2, symbol2)
+            print(env.steps_left, env.is_done())
+            env.show_board()
+            agent2.backup_value()
+
+        if env.winner == CROSS:
+            n_agent1_wins += 1
+        elif env.winner == CIRCLE:
+            n_agent2_wins += 1
+
+        # Print board.
+        if i % print_per_epochs == 0:
+            env.show_board()
+
+    agent1.save_state_value_table()
+    agent2.save_state_value_table()
+
+
+def main():
+    pass
+
+
+if __name__ == '__main__':
+    main()
