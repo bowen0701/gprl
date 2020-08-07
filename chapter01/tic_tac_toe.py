@@ -140,7 +140,7 @@ ALL_STATE_ENV_DICT = get_all_states()
 
 
 class Agent(object):
-    def __init__(self, player='X', step_size=0.01, epsilon=0.01):
+    def __init__(self, player='X', step_size=0.1, epsilon=0.1):
         self.player = player
         if self.player == 'X':
             self.symbol = CROSS
@@ -261,10 +261,10 @@ class Agent(object):
             self.V = json.load(open("state_value_o.json"))
 
 
-def self_train(epochs, print_per_epochs=100):
+def self_train(epochs, step_size=0.1, epsilon=0.01, print_per_epochs=100):
     """Self train an agent by playing games against itself."""
-    agent1 = Agent(player='X', step_size=0.01, epsilon=0.01)
-    agent2 = Agent(player='O', step_size=0.01, epsilon=0.01)
+    agent1 = Agent(player='X', step_size=step_size, epsilon=epsilon)
+    agent2 = Agent(player='O', step_size=step_size, epsilon=epsilon)
     n_agent1_wins = 0
     n_agent2_wins = 0
 
@@ -303,6 +303,8 @@ def self_train(epochs, print_per_epochs=100):
 
         # Print board.
         if i % print_per_epochs == 0:
+            print('Agent1 wins', round(n_agent1_wins / i, 2), 
+                  'Agent2 wins', round(n_agent2_wins / i, 2))
             env.show_board()
 
     agent1.save_state_value_table()
