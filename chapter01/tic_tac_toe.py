@@ -272,7 +272,7 @@ def self_train(epochs, print_per_epochs=100):
         # Reset both agents after epoch was done.
         env = Environment()
         # print(env.steps_left, env.is_done())
-        env.show_board()
+        # env.show_board()
         agent1.reset_episode(env)
         agent2.reset_episode(env)
 
@@ -282,7 +282,7 @@ def self_train(epochs, print_per_epochs=100):
             # print(env.steps_left, env.is_done())
             env = env.step(r1, c1, symbol1)
             # print(env.steps_left, env.is_done())
-            env.show_board()
+            # env.show_board()
             agent1.backup_value()
 
             if env.is_done():
@@ -293,7 +293,7 @@ def self_train(epochs, print_per_epochs=100):
             # print(env.steps_left, env.is_done())
             env = env.step(r2, c2, symbol2)
             # print(env.steps_left, env.is_done())
-            env.show_board()
+            # env.show_board()
             agent2.backup_value()
 
         if env.winner == CROSS:
