@@ -3,7 +3,6 @@ from __future__ import division
 from __future__ import print_function
 
 import itertools
-import random
 
 import numpy as np
 
@@ -196,18 +195,24 @@ class Agent(object):
         p = np.random.random()
         if p > self.epsilon:
             # Exploit.
-            r_next, c_next, state_next = None, None, None
-            value = -float('inf')
+            vals_positions = []
             for (r, c) in positions:
                 env_next = env.step(r, c, self.symbol)
                 s = env_next.state
                 v = self.V[s]
-                if v > value:
-                    r_next, c_next, state_next = r, c, s
+                vals_positions.append((v, (r, c)))
+
+            # Sort positions based on state-value, by breaking Python sort()'s stability.
+            np.random.shuffle(vals_positions)
+            vals_positions.sort(key=lambda x: x[0], reverse=True)
+
+            (r_next, c_next) = vals_positions[0][1]
+            env_next = env.step(r_next, c_next, self.symbol)
+            state_next = env_next.state
             is_greedy = True
         else:
             # Explore.
-            (r_next, c_next) = random.choice(positions)
+            (r_next, c_next) = positions[np.random.randint(len(positions))]
             env_next = env.step(r_next, c_next, self.symbol)
             state_next = env_next.state
             is_greedy = False
