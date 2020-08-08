@@ -140,7 +140,7 @@ ALL_STATE_ENV_DICT = get_all_states()
 
 
 class Agent(object):
-    def __init__(self, player='X', step_size=0.1, epsilon=0.1):
+    def __init__(self, player='X', step_size=0.01, epsilon=0.01):
         self.player = player
         if self.player == 'X':
             self.symbol = CROSS
@@ -201,11 +201,11 @@ class Agent(object):
                 s = env_next.state
                 v = self.V[s]
                 vals_positions.append((v, (r, c)))
-
+            
             # Sort positions based on state-value, by breaking Python sort()'s stability.
             np.random.shuffle(vals_positions)
             vals_positions.sort(key=lambda x: x[0], reverse=True)
-
+            
             (r_next, c_next) = vals_positions[0][1]
             env_next = env.step(r_next, c_next, self.symbol)
             state_next = env_next.state
@@ -227,8 +227,9 @@ class Agent(object):
         (r_next, c_next, state_next, is_greedy) = self._play_strategy(
             env, positions)
 
-        self.state_parent_d[state_next] = self.states[-1]
-        self.state_isgreedy_d[state_next] = is_greedy
+        state = self.states[-1]
+        self.state_parent_d[state_next] = state
+        self.state_isgreedy_d[state] = is_greedy
         self.states.append(state_next)
         return r_next, c_next, self.symbol
 
@@ -242,7 +243,7 @@ class Agent(object):
         """
         s = self.states[-1]
         s_prev = self.state_parent_d[s]
-        is_greedy = self.state_isgreedy_d[s]
+        is_greedy = self.state_isgreedy_d[s_prev]
         if is_greedy:
             self.V[s_prev] += self.step_size * (self.V[s] - self.V[s_prev])
 
@@ -261,7 +262,7 @@ class Agent(object):
             self.V = json.load(open("state_value_o.json"))
 
 
-def self_train(epochs, step_size=0.1, epsilon=0.01, print_per_epochs=100):
+def self_train(epochs, step_size=0.1, epsilon=0.1, print_per_epochs=100):
     """Self train an agent by playing games against itself."""
     agent1 = Agent(player='X', step_size=step_size, epsilon=epsilon)
     agent2 = Agent(player='O', step_size=step_size, epsilon=epsilon)
@@ -271,18 +272,13 @@ def self_train(epochs, step_size=0.1, epsilon=0.01, print_per_epochs=100):
     for i in range(1, epochs + 1):
         # Reset both agents after epoch was done.
         env = Environment()
-        # print(env.steps_left, env.is_done())
-        # env.show_board()
         agent1.reset_episode(env)
         agent2.reset_episode(env)
 
         while not env.is_done():
             # Agent 1 plays one step.
             r1, c1, symbol1 = agent1.play(env)
-            # print(env.steps_left, env.is_done())
             env = env.step(r1, c1, symbol1)
-            # print(env.steps_left, env.is_done())
-            # env.show_board()
             agent1.backup_value()
 
             if env.is_done():
@@ -290,17 +286,14 @@ def self_train(epochs, step_size=0.1, epsilon=0.01, print_per_epochs=100):
 
             # Agent 2 plays the next step.
             r2, c2, symbol2 = agent2.play(env)
-            # print(env.steps_left, env.is_done())
             env = env.step(r2, c2, symbol2)
-            # print(env.steps_left, env.is_done())
-            # env.show_board()
             agent2.backup_value()
 
         if env.winner == CROSS:
             n_agent1_wins += 1
         elif env.winner == CIRCLE:
             n_agent2_wins += 1
-
+                
         # Print board.
         if i % print_per_epochs == 0:
             print('Agent1 wins', round(n_agent1_wins / i, 2), 
