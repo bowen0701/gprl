@@ -410,7 +410,16 @@ def human_agent_compete():
 
 
 def main():
-    pass
+    while True:
+        cmd = input('Train robot (T) or play game (P)?')
+        if cmd in ['T', 'P']:
+            break
+
+    if cmd == 'T':
+        self_train(epochs=100000, step_size=0.1, epsilon=0.075, 
+                   print_per_epochs=500)
+    elif cmd == 'P':
+        human_agent_compete()
 
 
 if __name__ == '__main__':
