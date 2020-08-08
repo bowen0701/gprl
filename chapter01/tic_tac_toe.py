@@ -202,7 +202,7 @@ class Agent(object):
                 v = self.V[s]
                 vals_positions.append((v, (r, c)))
             
-            # Sort positions based on state-value, by breaking Python sort()'s stability.
+            # Sort positions based on state-value, by breaking Python stable sort().
             np.random.shuffle(vals_positions)
             vals_positions.sort(key=lambda x: x[0], reverse=True)
             
@@ -229,7 +229,7 @@ class Agent(object):
 
         state = self.states[-1]
         self.state_parent_d[state_next] = state
-        self.state_isgreedy_d[state] = is_greedy
+        self.state_isgreedy_d[state_next] = is_greedy
         self.states.append(state_next)
         return r_next, c_next, self.symbol
 
@@ -243,7 +243,7 @@ class Agent(object):
         """
         s = self.states[-1]
         s_prev = self.state_parent_d[s]
-        is_greedy = self.state_isgreedy_d[s_prev]
+        is_greedy = self.state_isgreedy_d[s]
         if is_greedy:
             self.V[s_prev] += self.step_size * (self.V[s] - self.V[s_prev])
 
