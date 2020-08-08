@@ -315,6 +315,33 @@ def self_train(epochs, step_size=0.1, epsilon=0.1, print_per_epochs=100):
     agent2.save_state_value_table()
 
 
+class Human:
+    def __init__(self, player='X'):
+        self.player = player
+        if self.player == 'X':
+            self.symbol = CROSS
+        elif self.player == 'O':
+            self.symbol = CIRCLE
+        else:
+            raise InputError("Input player should be 'X' or 'O'")
+
+    def play(self, env):
+        # Get human input position.
+        print('Input position with the format: "row,col" with ' +
+              'row/col: 0~{}'.format(BOARD_NROWS - 1))
+        positions = set(env.get_positions())
+        # print(positions)
+        while True:
+            input_position = input()
+            input_position = tuple([int(x) for x in input_position.split(',')])
+            if input_position in positions:
+                break
+            else:
+                print('Input position was occupied, please input "row,col" again.')
+        (r, c) = input_position
+        return r, c, self.symbol
+
+
 def main():
     pass
 
