@@ -192,30 +192,34 @@ class Agent(object):
         where p% is epsilon. 
         If epsilon is zero, then use the greedy strategy.
         """
+        # Sort positions based on state-value, by breaking Python sort()'s stability.
+        vals_positions = []
+        for (r, c) in positions:
+            env_next = env.step(r, c, self.symbol)
+            s = env_next.state
+            v = self.V[s]
+            vals_positions.append((v, (r, c)))
+
+        np.random.shuffle(vals_positions)
+        vals_positions.sort(key=lambda x: x[0], reverse=True)
+
         p = np.random.random()
         if p > self.epsilon:
             # Exploit.
-            vals_positions = []
-            for (r, c) in positions:
-                env_next = env.step(r, c, self.symbol)
-                s = env_next.state
-                v = self.V[s]
-                vals_positions.append((v, (r, c)))
-            
-            # Sort positions based on state-value, by breaking Python stable sort().
-            np.random.shuffle(vals_positions)
-            vals_positions.sort(key=lambda x: x[0], reverse=True)
-            
             (r_next, c_next) = vals_positions[0][1]
-            env_next = env.step(r_next, c_next, self.symbol)
-            state_next = env_next.state
             is_greedy = True
         else:
             # Explore.
-            (r_next, c_next) = positions[np.random.randint(len(positions))]
-            env_next = env.step(r_next, c_next, self.symbol)
-            state_next = env_next.state
+            if len(vals_positions) > 1:
+                vals_positions_explore = vals_positions[1:]
+                n = len(vals_positions_explore)
+                (r_next, c_next) = vals_positions_explore[np.random.randint(n)][1]
+            else:
+                (r_next, c_next) = vals_positions[0][1]
             is_greedy = False
+
+        env_next = env.step(r_next, c_next, self.symbol)
+        state_next = env_next.state
         return (r_next, c_next, state_next, is_greedy)
     
     def play(self, env):
