@@ -309,13 +309,14 @@ def self_train(epochs, step_size=0.1, epsilon=0.1, print_per_epochs=100):
                           round(n_agent2_wins / i, 2), 
                           round(n_ties / i, 2)))
             env.show_board()
+            print('\n')
 
     agent1.save_state_value_table()
     agent2.save_state_value_table()
 
 
 class Human:
-    """"""
+    """Human class."""
     def __init__(self, player='X'):
         self.player = player
         if self.player == 'X':
