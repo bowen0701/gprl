@@ -112,11 +112,10 @@ class Environment(object):
                 else:
                     board[r][c] = ' '
 
-        print('Board: is_done={}, winner={}'
-              .format(self.is_done(), self.winner))
+        print('Board: is_done={}, steps_left={}, winner={}'
+              .format(self.is_done(), self.steps_left, self.winner))
         for r in range(BOARD_NROWS):
             print(board[r])
-        print('\n')
 
 
 def _dfs_states(cur_symbol, env, all_state_env_d):
@@ -301,7 +300,7 @@ def self_train(epochs, step_size=0.1, epsilon=0.1, print_per_epochs=100):
             n_agent2_wins += 1
         else:
             n_ties += 1
-                
+
         # Print board.
         if i % print_per_epochs == 0:
             print('Epoch {}: Agent1 wins {}, Agent2 wins {}, ties {}'
@@ -316,30 +315,87 @@ def self_train(epochs, step_size=0.1, epsilon=0.1, print_per_epochs=100):
 
 
 class Human:
+    """"""
     def __init__(self, player='X'):
         self.player = player
         if self.player == 'X':
             self.symbol = CROSS
         elif self.player == 'O':
             self.symbol = CIRCLE
-        else:
-            raise InputError("Input player should be 'X' or 'O'")
 
     def play(self, env):
+        """Play a move from possible states given current state."""
         # Get human input position.
-        print('Input position with the format: "row,col" with ' +
-              'row/col: 0~{}'.format(BOARD_NROWS - 1))
         positions = set(env.get_positions())
-        # print(positions)
         while True:
-            input_position = input()
+            input_position = input(
+                'Input position with the format: "row,col" with ' +
+                'row/col: 0~{}: '.format(BOARD_NROWS - 1))
             input_position = tuple([int(x) for x in input_position.split(',')])
             if input_position in positions:
                 break
             else:
-                print('Input position was occupied, please input "row,col" again.')
+                print('Input position was occupied, please input "row,col" again.\n')
         (r, c) = input_position
         return r, c, self.symbol
+
+
+def human_agent_compete():
+    """Human compete with agent."""
+    # Get human player.
+    human_name = input('Please input your name: ')
+    while True:
+        human_player = input('Please input your player: "X" for play 1st, "O" for play 2nd: ')
+        if human_player in ['X', 'O']:
+            break
+
+    env = Environment()
+    env.show_board()
+
+    # Set up human & agent as player1 or player2.
+    if human_player == 'X':
+        # Player1: human, player2: agent.
+        human, agent = Human(player='X'), Agent(player='O', epsilon=0)
+        player1, player2 = human, agent
+        player1_name, player2_name = human_name, 'Robot'
+    else:
+        # Player1: agent, player2: human.
+        agent, human = Agent(player='X', epsilon=0), Human(player='O')
+        player1, player2 = agent, human
+        player1_name, player2_name = 'Robot', human_name
+    agent.reset_episode(env)
+    agent.load_state_value_table()
+
+    # Start competition.
+    while not env.is_done():
+        # Player1 plays one step.
+        r1, c1, symbol1 = player1.play(env)
+        env = env.step(r1, c1, symbol1)
+        print('Player1, {} ({}), puts ({}, {})'
+              .format(player1_name, player1.player, r1, c1))
+        env.show_board()
+        print('\n')
+
+        if env.is_done():
+            break
+
+        # Player2 plays the next step.
+        r2, c2, symbol2 = player2.play(env)
+        env = env.step(r2, c2, symbol2)
+        print('Player2, {} ({}), puts ({}, {})'
+              .format(player2_name, player2.player, r2, c2))
+        env.show_board()
+        print('\n')
+
+    # Judge the winner.
+    if env.winner == human.symbol:
+        print('{} wins!'.format(human_name))
+    elif env.winner == -human.symbol:
+        print('{} loses to Robot...'.format(human_name))
+    else:
+        print('{} and Robot tie.'.format(human_name))
+
+    return env, human, agent
 
 
 def main():
