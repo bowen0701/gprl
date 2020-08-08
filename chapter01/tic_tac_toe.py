@@ -33,6 +33,15 @@ class Environment(object):
         self.state = hash(self.board)
         self.winner = EMPTY
 
+    def get_positions(self):
+        """Get possible action positions given current board."""
+        positions = []
+        for r in range(BOARD_NROWS):
+            for c in range(BOARD_NCOLS):
+                if self.board[r][c] == EMPTY:
+                    positions.append((r, c))
+        return positions
+
     def _judge(self):
         """Judge winner based on the current board."""
         # Check rows.
@@ -43,7 +52,7 @@ class Environment(object):
                 self.winner = symbol
                 self.steps_left = 0
                 return self
-        
+
         # Check columns.
         for c in range(BOARD_NCOLS):
             col = self.board[:, c]
@@ -52,7 +61,7 @@ class Environment(object):
                 self.winner = symbol
                 self.steps_left = 0
                 return self
-        
+
         # Check diagonals.
         mid = BOARD_NROWS // 2
         symbol = self.board[mid][mid]
@@ -63,7 +72,8 @@ class Environment(object):
                 diag2.append(self.board[i][BOARD_NROWS - i - 1])
 
             diag1, diag2 = np.array(diag1), np.array(diag2)
-            if np.sum(diag1) == symbol * NMARKS or np.sum(diag2) == symbol * NMARKS:
+            if (np.sum(diag1) == symbol * NMARKS or 
+                np.sum(diag2) == symbol * NMARKS):
                 self.winner = symbol
                 self.steps_left = 0
                 return self
@@ -174,15 +184,6 @@ class Agent(object):
         self.state_parent_d[env.state] = None
         self.state_isgreedy_d[env.state] = False
 
-    def _get_actions(self, env, symbol):
-        """Get possible action positions given current board."""
-        positions = []
-        for r in range(BOARD_NROWS):
-            for c in range(BOARD_NCOLS):
-                if env.board[r][c] == EMPTY:
-                    positions.append((r, c))
-        return positions
-
     def _play_strategy(self, env, positions):
         """Play with strategy. Here we use epsilon-greedy strategy.
 
@@ -205,7 +206,7 @@ class Agent(object):
 
         p = np.random.random()
         if p > self.epsilon:
-            # Exploit.
+            # Exploit.            
             (r_next, c_next) = vals_positions[0][1]
             is_greedy = True
         else:
@@ -221,11 +222,11 @@ class Agent(object):
         env_next = env.step(r_next, c_next, self.symbol)
         state_next = env_next.state
         return (r_next, c_next, state_next, is_greedy)
-    
+
     def play(self, env):
         """Play a move from possible states given current state."""
         # Get next action positions from environment.
-        positions = self._get_actions(env, self.symbol)
+        positions = env.get_positions()
 
         # Apply epsilon-greedy strategy.
         (r_next, c_next, state_next, is_greedy) = self._play_strategy(
@@ -239,7 +240,7 @@ class Agent(object):
 
     def backup_value(self):
         """Back up value by a temporal-difference learning after a greedy move.
-        
+
         Temporal-difference learning:
           V(S_t) <- V(S_t) + a * [V(S_{t+1}) - V(S_t)]
         where a is the step size, and V(S_t) is the state-value function
@@ -272,6 +273,7 @@ def self_train(epochs, step_size=0.1, epsilon=0.1, print_per_epochs=100):
     agent2 = Agent(player='O', step_size=step_size, epsilon=epsilon)
     n_agent1_wins = 0
     n_agent2_wins = 0
+    n_ties = 0
 
     for i in range(1, epochs + 1):
         # Reset both agents after epoch was done.
@@ -297,11 +299,16 @@ def self_train(epochs, step_size=0.1, epsilon=0.1, print_per_epochs=100):
             n_agent1_wins += 1
         elif env.winner == CIRCLE:
             n_agent2_wins += 1
+        else:
+            n_ties += 1
                 
         # Print board.
         if i % print_per_epochs == 0:
-            print('Agent1 wins', round(n_agent1_wins / i, 2), 
-                  'Agent2 wins', round(n_agent2_wins / i, 2))
+            print('Epoch {}: Agent1 wins {}, Agent2 wins {}, ties {}'
+                  .format(i,
+                          round(n_agent1_wins / i, 2), 
+                          round(n_agent2_wins / i, 2), 
+                          round(n_ties / i, 2)))
             env.show_board()
 
     agent1.save_state_value_table()
