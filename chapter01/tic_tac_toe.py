@@ -222,19 +222,26 @@ class Agent(object):
         state_next = env_next.state
         return (r_next, c_next, state_next, is_greedy)
 
+    def set_state(self, state_next):
+        state = self.states[-1]
+        self.state_parent_d[state_next] = state
+        self.state_isgreedy_d[state_next] = True
+        self.states.append(state_next)
+        return self
+
     def play(self, env):
         """Play a move from possible states given current state."""
         # Get next action positions from environment.
         positions = env.get_positions()
 
         # Apply epsilon-greedy strategy.
-        (r_next, c_next, state_next, is_greedy) = self._play_strategy(
-            env, positions)
+        (r_next, c_next, state_next, is_greedy) = self._play_strategy(env, positions)
 
-        state = self.states[-1]
-        self.state_parent_d[state_next] = state
-        self.state_isgreedy_d[state_next] = is_greedy
-        self.states.append(state_next)
+        # state = self.states[-1]
+        # self.state_parent_d[state_next] = state
+        # self.state_isgreedy_d[state_next] = is_greedy
+        # self.states.append(state_next)
+        self.set_state(state_next)
         return r_next, c_next, self.symbol
 
     def backup_value(self):
@@ -266,7 +273,7 @@ class Agent(object):
             self.V = json.load(open("state_value_o.json"))
 
 
-def self_train(epochs, step_size=0.1, epsilon=0.1, print_per_epochs=100):
+def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
     """Self train an agent by playing games against itself."""
     agent1 = Agent(player='X', step_size=step_size, epsilon=epsilon)
     agent2 = Agent(player='O', step_size=step_size, epsilon=epsilon)
@@ -295,8 +302,12 @@ def self_train(epochs, step_size=0.1, epsilon=0.1, print_per_epochs=100):
             agent2.backup_value()
 
         if env.winner == CROSS:
+            agent2.set_state(env.state)
+            agent2.backup_value()
             n_agent1_wins += 1
         elif env.winner == CIRCLE:
+            agent1.set_state(env.state)
+            agent1.backup_value()
             n_agent2_wins += 1
         else:
             n_ties += 1
@@ -346,7 +357,8 @@ def human_agent_compete():
     # Get human player.
     human_name = input('Please input your name: ')
     while True:
-        human_player = input('Please input your player: "X" for play 1st, "O" for play 2nd: ')
+        human_player = input('Please input your player: ' + 
+                             '1st player (X), 2nd player (O): ')
         if human_player in ['X', 'O']:
             break
 
@@ -395,8 +407,6 @@ def human_agent_compete():
         print('{} loses to Robot...'.format(human_name))
     else:
         print('{} and Robot tie.'.format(human_name))
-
-    return env, human, agent
 
 
 def main():
