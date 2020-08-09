@@ -6,6 +6,7 @@ import itertools
 
 import numpy as np
 import json
+import re
 
 
 NMARKS = 3
@@ -338,16 +339,23 @@ class Human:
     def play(self, env):
         """Play a move from possible states given current state."""
         # Get human input position.
+        input_position_re = re.compile('^[0-2],[0-2]$')
         positions = set(env.get_positions())
         while True:
             input_position = input(
-                'Input position with the format: "row,col" with ' +
+                'Please input position with the format: "row,col" with ' +
                 'row/col: 0~{}: '.format(BOARD_NROWS - 1))
+
+            if not input_position_re.match(input_position):
+                print('Input position style is incorrect!\n')
+                continue
+
             input_position = tuple([int(x) for x in input_position.split(',')])
             if input_position in positions:
                 break
             else:
-                print('Input position was occupied, please input "row,col" again.\n')
+                print('Input position was occupied, please input "row,col" again!\n')
+
         (r, c) = input_position
         return r, c, self.symbol
 
@@ -403,7 +411,7 @@ def human_agent_compete():
 
     # Judge the winner.
     if env.winner == human.symbol:
-        print('{} wins!'.format(human_name))
+        print('You wins, {}!'.format(human_name))
     elif env.winner == -human.symbol:
         print('{} loses to Robot...'.format(human_name))
     else:
