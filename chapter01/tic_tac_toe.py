@@ -377,7 +377,7 @@ def human_agent_compete():
         agent, human = Agent(player='X', epsilon=0), Human(player='O')
         player1, player2 = agent, human
         player1_name, player2_name = 'Robot', human_name
-    agent.reset_episode(env)
+    agent.init_episode(env)
     agent.load_state_value_table()
 
     # Start competition.
