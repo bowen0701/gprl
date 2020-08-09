@@ -319,7 +319,7 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
                           round(n_agent2_wins / i, 2), 
                           round(n_ties / i, 2)))
             env.show_board()
-            print('\n')
+            print('---')
 
     agent1.save_state_value_table()
     agent2.save_state_value_table()
@@ -363,7 +363,7 @@ def human_agent_compete():
 
     env = Environment()
     env.show_board()
-    print('\n')
+    print('---')
 
     # Set up human & agent as player1 or player2.
     if human_player == 'X':
@@ -387,7 +387,7 @@ def human_agent_compete():
         print('Player1, {} ({}), puts ({}, {})'
               .format(player1_name, player1.player, r1, c1))
         env.show_board()
-        print('\n')
+        print('---')
 
         if env.is_done():
             break
@@ -398,7 +398,7 @@ def human_agent_compete():
         print('Player2, {} ({}), puts ({}, {})'
               .format(player2_name, player2.player, r2, c2))
         env.show_board()
-        print('\n')
+        print('---')
 
     # Judge the winner.
     if env.winner == human.symbol:
