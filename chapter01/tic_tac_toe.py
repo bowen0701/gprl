@@ -297,12 +297,14 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
             env = env.step(r2, c2, symbol2)
             agent2.backup_value()
 
+        # Set final state with is_greedy=True to backup value.
+        is_greedy = True
         if env.winner == CROSS:
-            agent2.set_state(env.state)
+            agent2.set_state(env.state, is_greedy)
             agent2.backup_value()
             n_agent1_wins += 1
         elif env.winner == CIRCLE:
-            agent1.set_state(env.state)
+            agent1.set_state(env.state, is_greedy)
             agent1.backup_value()
             n_agent2_wins += 1
         else:
