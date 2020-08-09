@@ -222,10 +222,10 @@ class Agent(object):
         state_next = env_next.state
         return (r_next, c_next, state_next, is_greedy)
 
-    def set_state(self, state_next):
+    def set_state(self, state_next, is_greedy):
         state = self.states[-1]
         self.state_parent_d[state_next] = state
-        self.state_isgreedy_d[state_next] = True
+        self.state_isgreedy_d[state_next] = is_greedy
         self.states.append(state_next)
         return self
 
@@ -237,11 +237,7 @@ class Agent(object):
         # Apply epsilon-greedy strategy.
         (r_next, c_next, state_next, is_greedy) = self._play_strategy(env, positions)
 
-        # state = self.states[-1]
-        # self.state_parent_d[state_next] = state
-        # self.state_isgreedy_d[state_next] = is_greedy
-        # self.states.append(state_next)
-        self.set_state(state_next)
+        self.set_state(state_next, is_greedy)
         return r_next, c_next, self.symbol
 
     def backup_value(self):
@@ -411,7 +407,7 @@ def human_agent_compete():
 
 def main():
     while True:
-        cmd = input('Train robot (T) or play game (P)?')
+        cmd = input('Train robot (T) or play game (P)? ')
         if cmd in ['T', 'P']:
             break
 
