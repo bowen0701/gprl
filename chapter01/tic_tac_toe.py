@@ -21,11 +21,6 @@ def hash(board):
     return ','.join([str(x) for x in list(board.reshape(BOARD_SIZE))])
 
 
-def unhash(state):
-    return (np.fromstring(state, dtype=int, sep=',')
-              .reshape((BOARD_NROWS, BOARD_NCOLS)))
-
-
 class Environment(object):
     def __init__(self):
         self.steps_left = BOARD_SIZE
@@ -146,9 +141,6 @@ def get_all_states():
     return all_state_env_d
 
 
-ALL_STATE_ENV_DICT = get_all_states()
-
-
 class Agent(object):
     def __init__(self, player='X', step_size=0.01, epsilon=0.01):
         self.player = player
@@ -164,6 +156,15 @@ class Agent(object):
 
         # Create a state-value table V.
         self.V = dict()
+
+        # Memoize action state, its parent state & is_greedy bool.
+        self.states = []
+        self.state_parent_d = dict()
+        self.state_isgreedy_d = dict()
+
+    def init_state_value_table(self):
+        ALL_STATE_ENV_DICT = get_all_states()
+
         for s in ALL_STATE_ENV_DICT:
             env = ALL_STATE_ENV_DICT[s]
             if env.winner == self.symbol:
@@ -172,11 +173,6 @@ class Agent(object):
                 self.V[s] = 0.0
             else:
                 self.V[s] = 0.5
-
-        # Memoize action state, its parent state & is_greedy bool.
-        self.states = []
-        self.state_parent_d = dict()
-        self.state_isgreedy_d = dict()
 
     def reset_episode(self, env):
         """Set up agent's init data."""
@@ -238,6 +234,10 @@ class Agent(object):
         # Apply epsilon-greedy strategy.
         (r_next, c_next, state_next, is_greedy) = self._play_strategy(env, positions)
 
+        # state = self.states[-1]
+        # self.state_parent_d[state_next] = state
+        # self.state_isgreedy_d[state_next] = is_greedy
+        # self.states.append(state_next)
         self.set_state(state_next, is_greedy)
         return r_next, c_next, self.symbol
 
@@ -274,6 +274,9 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
     """Self train an agent by playing games against itself."""
     agent1 = Agent(player='X', step_size=step_size, epsilon=epsilon)
     agent2 = Agent(player='O', step_size=step_size, epsilon=epsilon)
+    agent1.init_state_value_table()
+    agent2.init_state_value_table()
+
     n_agent1_wins = 0
     n_agent2_wins = 0
     n_ties = 0
