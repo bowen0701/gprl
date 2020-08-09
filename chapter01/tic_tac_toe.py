@@ -411,7 +411,7 @@ def human_agent_compete():
 
     # Judge the winner.
     if env.winner == human.symbol:
-        print('You wins, {}!'.format(human_name))
+        print('Congrats {}, you win!'.format(human_name))
     elif env.winner == -human.symbol:
         print('{} loses to Robot...'.format(human_name))
     else:
