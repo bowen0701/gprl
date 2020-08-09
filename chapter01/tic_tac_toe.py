@@ -154,19 +154,20 @@ class Agent(object):
         self.step_size = step_size
         self.epsilon = epsilon
 
-        # Create a state-value table V.
+        # Create a state-value table V:state->value.
         self.V = dict()
 
-        # Memoize action state, its parent state & is_greedy bool.
+        # Memoize action state, its parent state & is_greedy bool:
+        # state_parent_d:state->parent state & state_isgreedy_d:state->is_greedy bool.
         self.states = []
         self.state_parent_d = dict()
         self.state_isgreedy_d = dict()
 
     def init_state_value_table(self):
-        ALL_STATE_ENV_DICT = get_all_states()
+        """Init state-value table."""
+        all_state_env_d = get_all_states()
 
-        for s in ALL_STATE_ENV_DICT:
-            env = ALL_STATE_ENV_DICT[s]
+        for s, env in all_state_env_d.items():
             if env.winner == self.symbol:
                 self.V[s] = 1.0
             elif env.winner == -self.symbol:
@@ -174,8 +175,8 @@ class Agent(object):
             else:
                 self.V[s] = 0.5
 
-    def reset_episode(self, env):
-        """Set up agent's init data."""
+    def init_episode(self, env):
+        """Init episode."""
         self.states.append(env.state)
         self.state_parent_d[env.state] = None
         self.state_isgreedy_d[env.state] = False
@@ -234,6 +235,7 @@ class Agent(object):
         # Apply epsilon-greedy strategy.
         (r_next, c_next, state_next, is_greedy) = self._play_strategy(env, positions)
 
+        # Set state.
         self.set_state(state_next, is_greedy)
         return r_next, c_next, self.symbol
 
@@ -280,8 +282,8 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
     for i in range(1, epochs + 1):
         # Reset both agents after epoch was done.
         env = Environment()
-        agent1.reset_episode(env)
-        agent2.reset_episode(env)
+        agent1.init_episode(env)
+        agent2.init_episode(env)
 
         while not env.is_done():
             # Agent 1 plays one step.
