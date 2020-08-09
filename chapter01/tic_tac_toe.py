@@ -363,6 +363,7 @@ def human_agent_compete():
 
     env = Environment()
     env.show_board()
+    print('\n')
 
     # Set up human & agent as player1 or player2.
     if human_player == 'X':
