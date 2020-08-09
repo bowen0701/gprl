@@ -5,6 +5,7 @@ from __future__ import print_function
 import itertools
 
 import numpy as np
+import json
 
 
 NMARKS = 3
