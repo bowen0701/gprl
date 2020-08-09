@@ -234,10 +234,6 @@ class Agent(object):
         # Apply epsilon-greedy strategy.
         (r_next, c_next, state_next, is_greedy) = self._play_strategy(env, positions)
 
-        # state = self.states[-1]
-        # self.state_parent_d[state_next] = state
-        # self.state_isgreedy_d[state_next] = is_greedy
-        # self.states.append(state_next)
         self.set_state(state_next, is_greedy)
         return r_next, c_next, self.symbol
 
