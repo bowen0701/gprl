@@ -249,10 +249,10 @@ class Agent(object):
         at time step t.
         """
         s = self.states[-1]
-        s_prev = self.state_parent_d[s]
+        s_par = self.state_parent_d[s]
         is_greedy = self.state_isgreedy_d[s]
         if is_greedy:
-            self.V[s_prev] += self.step_size * (self.V[s] - self.V[s_prev])
+            self.V[s_par] += self.step_size * (self.V[s] - self.V[s_par])
 
     def save_state_value_table(self):
         """Save learned state-value table."""
