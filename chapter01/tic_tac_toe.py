@@ -142,6 +142,9 @@ def get_all_states():
     return all_state_env_d
 
 
+ALL_STATE_ENV_D = get_all_states()
+
+
 class Agent(object):
     def __init__(self, player='X', step_size=0.01, epsilon=0.01):
         self.player = player
@@ -164,9 +167,9 @@ class Agent(object):
         self.state_parent_d = dict()
         self.state_isgreedy_d = dict()
 
-    def init_state_value_table(self):
+    def init_state_values(self):
         """Init state-value table."""
-        all_state_env_d = get_all_states()
+        all_state_env_d = ALL_STATE_ENV_D
 
         for s, env in all_state_env_d.items():
             if env.winner == self.symbol:
@@ -176,7 +179,7 @@ class Agent(object):
             else:
                 self.V[s] = 0.5
 
-    def init_episode(self, env):
+    def reset_episode(self, env):
         """Init episode."""
         self.states.append(env.state)
         self.state_parent_d[env.state] = None
@@ -221,7 +224,7 @@ class Agent(object):
         state_next = env_next.state
         return (r_next, c_next, state_next, is_greedy)
 
-    def set_state(self, state_next, is_greedy):
+    def add_state(self, state_next, is_greedy):
         state = self.states[-1]
         self.state_parent_d[state_next] = state
         self.state_isgreedy_d[state_next] = is_greedy
@@ -236,8 +239,8 @@ class Agent(object):
         # Apply epsilon-greedy strategy.
         (r_next, c_next, state_next, is_greedy) = self._play_strategy(env, positions)
 
-        # Set state.
-        self.set_state(state_next, is_greedy)
+        # Add state.
+        self.add_state(state_next, is_greedy)
         return r_next, c_next, self.symbol
 
     def backup_value(self):
@@ -254,14 +257,14 @@ class Agent(object):
         if is_greedy:
             self.V[s_par] += self.step_size * (self.V[s] - self.V[s_par])
 
-    def save_state_value_table(self):
+    def save_state_values(self):
         """Save learned state-value table."""
         if self.symbol == CROSS:
             json.dump(self.V, open("state_value_x.json", 'w'))
         else:
             json.dump(self.V, open("state_value_o.json", 'w'))
 
-    def load_state_value_table(self):
+    def load_state_values(self):
         """Load learned state-value table."""
         if self.symbol == CROSS:
             self.V = json.load(open("state_value_x.json"))
@@ -343,8 +346,9 @@ class Human:
         positions = set(env.get_positions())
         while True:
             input_position = input(
-                'Please input position with the format: "row,col" with ' +
-                'row/col: 0~{}: '.format(BOARD_NROWS - 1))
+                'Please input position for {} in the format: "row,col" with '
+                .format(self.player) +
+                'row/col: 0~{}:\n'.format(BOARD_NROWS - 1))
 
             if not input_position_re.match(input_position):
                 print('Input position style is incorrect!\n')
@@ -363,10 +367,10 @@ class Human:
 def human_agent_compete():
     """Human compete with agent."""
     # Get human player.
-    human_name = input('Please input your name: ')
+    human_name = input('Please input your name:\n')
     while True:
         human_player = input('Please input your player: ' + 
-                             '1st player (X), 2nd player (O): ')
+                             '1st player (X), 2nd player (O):\n')
         if human_player in ['X', 'O']:
             break
 
@@ -385,8 +389,8 @@ def human_agent_compete():
         agent, human = Agent(player='X', epsilon=0), Human(player='O')
         player1, player2 = agent, human
         player1_name, player2_name = 'Robot', human_name
-    agent.init_episode(env)
-    agent.load_state_value_table()
+    agent.reset_episode(env)
+    agent.load_state_values()
 
     # Start competition.
     while not env.is_done():
