@@ -22,6 +22,8 @@ def hash(board):
 
 
 class Environment(object):
+    """Environment class for Tic-Tac Toe."""
+
     def __init__(self):
         self.steps_left = BOARD_SIZE
         self.board = (np.array([EMPTY] * BOARD_SIZE)
@@ -145,6 +147,8 @@ ALL_STATE_ENV_D = get_all_states()
 
 
 class Agent(object):
+    """Agent class for Tic-Tac-Toe game."""
+
     def __init__(self, player='X', step_size=0.01, epsilon=0.01):
         self.player = player
         if self.player == 'X':
@@ -330,7 +334,8 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
 
 
 class Human:
-    """Human class."""
+    """Human class for Tic-Tac-Toe game."""
+
     def __init__(self, player='X'):
         self.player = player
         if self.player == 'X':
