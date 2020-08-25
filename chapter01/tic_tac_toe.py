@@ -176,10 +176,13 @@ class Agent(object):
 
         for s, env in all_state_env_d.items():
             if env.winner == self.symbol:
+                # If agent is winner, it gets reward 1.
                 self.V[s] = 1.0
-            elif env.winner == -self.symbol:
+            elif env.winner == -self.symbol or env.steps_left == 0:
+                # If agent is loser or tied, it gets reward 0.
                 self.V[s] = 0.0
             else:
+                # For other cases, agent get reward 0.5.
                 self.V[s] = 0.5
 
     def reset_episode(self, env):
