@@ -8,4 +8,4 @@ import re
 import numpy as np
 
 
-# TODO: implement k-armed bandit.s
+# TODO: implement k-armed bandit.
