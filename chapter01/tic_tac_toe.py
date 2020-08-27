@@ -21,7 +21,7 @@ def hash(board):
     return ','.join([str(x) for x in list(board.reshape(BOARD_SIZE))])
 
 
-class Environment(object):
+class Environment:
     """Environment class for Tic-Tac Toe."""
 
     def __init__(self):
@@ -146,7 +146,7 @@ def get_all_states():
 ALL_STATE_ENV_D = get_all_states()
 
 
-class Agent(object):
+class Agent:
     """Agent class for Tic-Tac-Toe game."""
 
     def __init__(self, player='X', step_size=0.01, epsilon=0.01):
