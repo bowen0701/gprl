@@ -6,6 +6,9 @@ import numpy as np
 
 
 class Agent:
-	
+	"""Agent class for k-armed bandit."""
+
+	def __init__(self):
+		pass
 
 
