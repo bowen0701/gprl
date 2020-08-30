@@ -191,10 +191,8 @@ class Agent:
         self.state_parent_d[env.state] = None
         self.state_isgreedy_d[env.state] = False
 
-    def _play_strategy(self, env, positions):
-        """Play with strategy. Here we use epsilon-greedy strategy.
-
-        Epsilon-greedy strategy: 
+    def _exploit_and_explore(self, env, positions):
+        """Exploit and explore by the epsilon-greedy strategy:
           - Take exploratory moves in the p% of times. 
           - Take greedy moves in the (100-p)% of times.
         where p% is epsilon. 
@@ -237,13 +235,18 @@ class Agent:
         self.states.append(state_next)
         return self
 
-    def play(self, env):
-        """Play a move from possible states given current state."""
+    def select_position(self, env):
+        """Select a action position by the epsilon-greedy strategy.
+
+        Agent gets candidate positions given current state.
+        Then it selects a position by strategy.
+        """
         # Get next action positions from environment.
         positions = env.get_positions()
 
-        # Apply epsilon-greedy strategy.
-        (r_next, c_next, state_next, is_greedy) = self._play_strategy(env, positions)
+        # Exloit and explore by the epsilon-greedy strategy.
+        (r_next, c_next, state_next, is_greedy) = self._exploit_and_explore(
+            env, positions)
 
         # Add state.
         self.add_state(state_next, is_greedy)
@@ -297,7 +300,7 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
 
         while not env.is_done():
             # Agent 1 plays one step.
-            r1, c1, symbol1 = agent1.play(env)
+            r1, c1, symbol1 = agent1.select_position(env)
             env = env.step(r1, c1, symbol1)
             agent1.backup_value()
 
@@ -305,7 +308,7 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
                 break
 
             # Agent 2 plays the next step.
-            r2, c2, symbol2 = agent2.play(env)
+            r2, c2, symbol2 = agent2.select_position(env)
             env = env.step(r2, c2, symbol2)
             agent2.backup_value()
 
@@ -346,8 +349,8 @@ class Human:
         elif self.player == 'O':
             self.symbol = CIRCLE
 
-    def play(self, env):
-        """Play a move from possible states given current state."""
+    def select_position(self, env):
+        """Select a position given current state."""
         # Get human input position.
         input_position_re = re.compile('^[0-2],[0-2]$')
         positions = set(env.get_positions())
@@ -402,7 +405,7 @@ def human_agent_compete():
     # Start competition.
     while not env.is_done():
         # Player1 plays one step.
-        r1, c1, symbol1 = player1.play(env)
+        r1, c1, symbol1 = player1.select_position(env)
         env = env.step(r1, c1, symbol1)
         print('Player1, {} ({}), puts ({}, {})'
               .format(player1_name, player1.player, r1, c1))
@@ -413,7 +416,7 @@ def human_agent_compete():
             break
 
         # Player2 plays the next step.
-        r2, c2, symbol2 = player2.play(env)
+        r2, c2, symbol2 = player2.select_position(env)
         env = env.step(r2, c2, symbol2)
         print('Player2, {} ({}), puts ({}, {})'
               .format(player2_name, player2.player, r2, c2))

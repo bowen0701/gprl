@@ -22,6 +22,9 @@ class MultiArmedBanditAgent:
 		self.Q = [0] * K
 		self.N = [0] * K
 
+	def select_action(self):
+		pass
+
 
 def k_armed_testbed():
 	pass
