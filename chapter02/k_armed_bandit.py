@@ -5,17 +5,26 @@ from __future__ import print_function
 import numpy as np
 
 
+ACTION_VAL_MEAN = 0
+ACTION_VAL_VAR = 1
+REWARD_VAR = 1
+
+
 class Environment::
     """Environment class for k-armed bandit."""
 
     def __init__(self, k):
         # Simulate k means from standard normal N(0, 1).
         self.k = k
-        self.means = np.random.normal(0, 1, self.k)
+        self.means = np.random.normal(ACTION_VAL_MEAN, ACTION_VAL_VAR, self.k)
 
     def get_actions(self):
-        """Get possible actions."""
-        pass
+        """Get possible (fixed) actions."""
+        return list(range(self.k))
+
+    def get_reward(self, action):
+        """Get reward given action."""
+        return np.random.normal(self.means[action], REWARD_VAR)
 
 
 class MultiArmedBanditAgent:
