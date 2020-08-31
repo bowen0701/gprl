@@ -5,7 +5,6 @@ from __future__ import print_function
 import numpy as np
 
 
-
 class Environment::
     """Environment class for k-armed bandit."""
 
