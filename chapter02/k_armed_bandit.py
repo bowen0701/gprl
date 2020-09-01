@@ -30,13 +30,18 @@ class Environment::
 class MultiArmedBanditAgent:
     """Agent class for multi-armed bandit."""
 
-    def __init__(self, k, optim_initial_values=None):
+    def __init__(self, 
+                 k, 
+                 step_size=0.01, 
+                 epsilon=0.01, 
+                 optim_initial_values=None):
         # Init k action-values Q(A) and counts N(A) for action A.
         self.k = k
         self.optim_initial_values = optim_initial_values
         pass
 
     def init_action_values(self):
+        """Initialize action values."""
         self.Q = [0] * self.k
         self.N = [0] * self.k
 
@@ -47,12 +52,42 @@ class MultiArmedBanditAgent:
         where p% is epsilon. 
         If epsilon is zero, then use the greedy strategy.
         """
-        pass
+        # TODO: Implement _exploit_and_explore().
+        # Sort actions based on state-value, by breaking Python sort()'s stability.
+        vals_actions = []
+        for a in actions:
+            v = self.Q[a]
+            vals_actions.append((v, a))
+
+        np.random.shuffle(vals_actions)
+        vals_actions.sort(key=lambda x: x[0], reverse=True)
+
+        p = np.random.random()
+        if p > self.epsilon:
+            # Exploit.  
+            (r_next, c_next) = vals_actions[0][1]
+        else:
+            # Explore.
+            if len(vals_actions) > 1:
+                vals_positions_explore = vals_actions[1:]
+                n = len(vals_positions_explore)
+                action = vals_positions_explore[np.random.randint(n)][1]
+            else:
+                action = vals_actions[0][1]
+
+        return action
 
     def select_action(self):
-        pass
+        """Select an action from possible actions."""
+        # Get next actions from environment.
+        actions = env.get_actions()
+
+        # Exloit and explore by the epsilon-greedy strategy.
+        action = self._exploit_and_explore(env, actions)
+        return action
 
     def estimate_action_values(self):
+        """Estimate action values."""
         pass
 
 
