@@ -211,7 +211,7 @@ class Agent:
 
         p = np.random.random()
         if p > self.epsilon:
-            # Exploit.            
+            # Exploit.
             (r_next, c_next) = vals_positions[0][1]
             is_greedy = True
         else:
