@@ -212,21 +212,21 @@ class Agent:
         p = np.random.random()
         if p > self.epsilon:
             # Exploit.
-            (r_next, c_next) = vals_positions[0][1]
+            (r, c) = vals_positions[0][1]
             is_greedy = True
         else:
             # Explore.
             if len(vals_positions) > 1:
                 vals_positions_explore = vals_positions[1:]
                 n = len(vals_positions_explore)
-                (r_next, c_next) = vals_positions_explore[np.random.randint(n)][1]
+                (r, c) = vals_positions_explore[np.random.randint(n)][1]
             else:
-                (r_next, c_next) = vals_positions[0][1]
+                (r, c) = vals_positions[0][1]
             is_greedy = False
 
-        env_next = env.step(r_next, c_next, self.symbol)
+        env_next = env.step(r, c, self.symbol)
         state_next = env_next.state
-        return (r_next, c_next, state_next, is_greedy)
+        return (r, c, state_next, is_greedy)
 
     def add_state(self, state_next, is_greedy):
         state = self.states[-1]
@@ -245,12 +245,12 @@ class Agent:
         positions = env.get_positions()
 
         # Exloit and explore by the epsilon-greedy strategy.
-        (r_next, c_next, state_next, is_greedy) = self._exploit_and_explore(
+        (r, c, state_next, is_greedy) = self._exploit_and_explore(
             env, positions)
 
         # Add state.
         self.add_state(state_next, is_greedy)
-        return r_next, c_next, self.symbol
+        return r, c, self.symbol
 
     def backup_state_value(self):
         """Back up value by a temporal-difference learning after a greedy move.
@@ -285,8 +285,8 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
     """Self train an agent by playing games against itself."""
     agent1 = Agent(player='X', step_size=step_size, epsilon=epsilon)
     agent2 = Agent(player='O', step_size=step_size, epsilon=epsilon)
-    agent1.init_state_value_table()
-    agent2.init_state_value_table()
+    agent1.init_state_values()
+    agent2.init_state_values()
 
     n_agent1_wins = 0
     n_agent2_wins = 0
@@ -295,8 +295,8 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
     for i in range(1, epochs + 1):
         # Reset both agents after epoch was done.
         env = Environment()
-        agent1.init_episode(env)
-        agent2.init_episode(env)
+        agent1.reset_episode(env)
+        agent2.reset_episode(env)
 
         while not env.is_done():
             # Agent 1 plays one step.
@@ -315,11 +315,11 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
         # Set final state with is_greedy=True to backup value.
         is_greedy = True
         if env.winner == CROSS:
-            agent2.set_state(env.state, is_greedy)
+            agent2.add_state(env.state, is_greedy)
             agent2.backup_state_value()
             n_agent1_wins += 1
         elif env.winner == CIRCLE:
-            agent1.set_state(env.state, is_greedy)
+            agent1.add_state(env.state, is_greedy)
             agent1.backup_state_value()
             n_agent2_wins += 1
         else:
@@ -335,8 +335,8 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
             env.show_board()
             print('---')
 
-    agent1.save_state_value_table()
-    agent2.save_state_value_table()
+    agent1.save_state_values()
+    agent2.save_state_values()
 
 
 class Human:
