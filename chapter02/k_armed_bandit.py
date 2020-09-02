@@ -45,15 +45,14 @@ class MultiArmedBanditAgent:
         self.Q = [0] * self.k
         self.N = [0] * self.k
 
-    def _exploit_and_explore(self, env, actions, UCB=False):
+    def _exploit_and_explore(self, actions):
         """Exploit and explore by the epsilon-greedy strategy:
           - Take exploratory moves in the p% of times. 
           - Take greedy moves in the (100-p)% of times.
         where p% is epsilon. 
         If epsilon is zero, then use the greedy strategy.
         """
-        # TODO: Implement _exploit_and_explore().
-        # Sort actions based on state-value, by breaking Python sort()'s stability.
+        # Sort actions based on action-value, by breaking Python sort()'s stability.
         vals_actions = []
         for a in actions:
             v = self.Q[a]
@@ -64,16 +63,12 @@ class MultiArmedBanditAgent:
 
         p = np.random.random()
         if p > self.epsilon:
-            # Exploit.  
-            (r_next, c_next) = vals_actions[0][1]
+            # Exploit.
+            action = vals_actions[0][1]
         else:
             # Explore.
-            if len(vals_actions) > 1:
-                vals_positions_explore = vals_actions[1:]
-                n = len(vals_positions_explore)
-                action = vals_positions_explore[np.random.randint(n)][1]
-            else:
-                action = vals_actions[0][1]
+            n = len(vals_actions)
+            action = vals_actions[np.random.randint(n)][1]
 
         return action
 
@@ -83,11 +78,11 @@ class MultiArmedBanditAgent:
         actions = env.get_actions()
 
         # Exloit and explore by the epsilon-greedy strategy.
-        action = self._exploit_and_explore(env, actions)
+        action = self._exploit_and_explore(actions)
         return action
 
-    def estimate_action_values(self):
-        """Estimate action values."""
+    def backup_action_value(self):
+        """Backup action value."""
         pass
 
 
