@@ -252,7 +252,7 @@ class Agent:
         self.add_state(state_next, is_greedy)
         return r_next, c_next, self.symbol
 
-    def backup_value(self):
+    def backup_state_value(self):
         """Back up value by a temporal-difference learning after a greedy move.
 
         Temporal-difference learning:
@@ -302,7 +302,7 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
             # Agent 1 plays one step.
             r1, c1, symbol1 = agent1.select_position(env)
             env = env.step(r1, c1, symbol1)
-            agent1.backup_value()
+            agent1.backup_state_value()
 
             if env.is_done():
                 break
@@ -310,17 +310,17 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
             # Agent 2 plays the next step.
             r2, c2, symbol2 = agent2.select_position(env)
             env = env.step(r2, c2, symbol2)
-            agent2.backup_value()
+            agent2.backup_state_value()
 
         # Set final state with is_greedy=True to backup value.
         is_greedy = True
         if env.winner == CROSS:
             agent2.set_state(env.state, is_greedy)
-            agent2.backup_value()
+            agent2.backup_state_value()
             n_agent1_wins += 1
         elif env.winner == CIRCLE:
             agent1.set_state(env.state, is_greedy)
-            agent1.backup_value()
+            agent1.backup_state_value()
             n_agent2_wins += 1
         else:
             n_ties += 1
