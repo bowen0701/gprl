@@ -439,7 +439,7 @@ def main():
             break
 
     if cmd == 'T':
-        self_train(epochs=100000, step_size=0.1, epsilon=0.075, 
+        self_train(epochs=100000, step_size=0.1, epsilon=0.1, 
                    print_per_epochs=500)
     elif cmd == 'P':
         human_agent_compete()
