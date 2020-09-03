@@ -170,7 +170,7 @@ class Agent:
         self.state_parent_d = dict()
         self.state_isgreedy_d = dict()
 
-    def init_state_values(self):
+    def init_state_value_table(self):
         """Init state-value table."""
         all_state_env_d = ALL_STATE_ENV_D
 
@@ -266,14 +266,14 @@ class Agent:
         if is_greedy:
             self.V[s_par] += self.step_size * (self.V[s] - self.V[s_par])
 
-    def save_state_values(self):
+    def save_state_value_table(self):
         """Save learned state-value table."""
         if self.symbol == CROSS:
             json.dump(self.V, open("state_value_x.json", 'w'))
         else:
             json.dump(self.V, open("state_value_o.json", 'w'))
 
-    def load_state_values(self):
+    def load_state_value_table(self):
         """Load learned state-value table."""
         if self.symbol == CROSS:
             self.V = json.load(open("state_value_x.json"))
@@ -285,8 +285,8 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
     """Self train an agent by playing games against itself."""
     agent1 = Agent(player='X', step_size=step_size, epsilon=epsilon)
     agent2 = Agent(player='O', step_size=step_size, epsilon=epsilon)
-    agent1.init_state_values()
-    agent2.init_state_values()
+    agent1.init_state_value_table()
+    agent2.init_state_value_table()
 
     n_agent1_wins = 0
     n_agent2_wins = 0
@@ -335,8 +335,8 @@ def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
             env.show_board()
             print('---')
 
-    agent1.save_state_values()
-    agent2.save_state_values()
+    agent1.save_state_value_table()
+    agent2.save_state_value_table()
 
 
 class Human:
@@ -400,7 +400,7 @@ def human_agent_compete():
         player1, player2 = agent, human
         player1_name, player2_name = 'Robot', human_name
     agent.reset_episode(env)
-    agent.load_state_values()
+    agent.load_state_value_table()
 
     # Start competition.
     while not env.is_done():
