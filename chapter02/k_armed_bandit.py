@@ -52,21 +52,20 @@ class MultiArmedBanditAgent:
         where p% is epsilon. 
         If epsilon is zero, then use the greedy strategy.
         """
-        # Sort actions based on action-value, by breaking Python sort()'s stability.
         vals_actions = []
         for a in actions:
             v = self.Q[a]
             vals_actions.append((v, a))
 
-        np.random.shuffle(vals_actions)
-        vals_actions.sort(key=lambda x: x[0], reverse=True)
-
         p = np.random.random()
         if p > self.epsilon:
-            # Exploit.
+            # Exploit by selecting the action with the greatest value and
+            # breaking ties randomly.
+            np.random.shuffle(vals_actions)
+            vals_actions.sort(key=lambda x: x[0], reverse=True)
             action = vals_actions[0][1]
         else:
-            # Explore.
+            # Explore by selecting action randomly.
             n = len(vals_actions)
             action = vals_actions[np.random.randint(n)][1]
 
