@@ -211,11 +211,11 @@ class Agent:
 
         p = np.random.random()
         if p > self.epsilon:
-            # Exploit.
+            # Exploit by selecting the move with the greatest value.
             (r, c) = vals_positions[0][1]
             is_greedy = True
         else:
-            # Explore.
+            # Explore by selecting randomly from among the other moves instead.
             if len(vals_positions) > 1:
                 vals_positions_explore = vals_positions[1:]
                 n = len(vals_positions_explore)
