@@ -198,7 +198,6 @@ class Agent:
         where p% is epsilon. 
         If epsilon is zero, then use the greedy strategy.
         """
-        # Sort positions based on state-value, by breaking Python sort()'s stability.
         vals_positions = []
         for (r, c) in positions:
             env_next = env.step(r, c, self.symbol)
@@ -206,6 +205,7 @@ class Agent:
             v = self.V[s]
             vals_positions.append((v, (r, c)))
 
+        # Break state-value ties randomly.
         np.random.shuffle(vals_positions)
         vals_positions.sort(key=lambda x: x[0], reverse=True)
 
