@@ -39,11 +39,15 @@ class MultiArmedBanditAgent:
         self.k = k
         self.step_size = step_size
         self.epsilon = epsilon
-        self.optim_init_values = optim_init_values
+
+        if optim_init_values:
+            self.optim_init_values = optim_init_values
+        else:
+            self.optim_init_values = 0
 
     def init_action_values(self):
         """Initialize action values."""
-        self.Q = [0] * self.k
+        self.Q = [0 + self.optim_init_values] * self.k
         self.N = [0] * self.k
 
     def _exploit_and_explore(self, actions):
