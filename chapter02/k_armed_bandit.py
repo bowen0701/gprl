@@ -33,11 +33,13 @@ class MultiArmedBanditAgent:
     def __init__(self, 
                  k, 
                  step_size=0.01, 
-                 epsilon=0.01):
+                 epsilon=0.01,
+                 optim_init_values=None):
         # Init k action-values Q(A) and counts N(A) for action A.
         self.k = k
         self.step_size = step_size
         self.epsilon = epsilon
+        self.optim_init_values = optim_init_values
 
     def init_action_values(self):
         """Initialize action values."""
