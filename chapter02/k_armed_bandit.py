@@ -35,7 +35,6 @@ class MultiArmedBanditAgent:
                  step_size=0.01, 
                  epsilon=0.01,
                  optim_init_values=None):
-        # Init k action-values Q(A) and counts N(A) for action A.
         self.k = k
         self.step_size = step_size
         self.epsilon = epsilon
@@ -44,6 +43,9 @@ class MultiArmedBanditAgent:
             self.optim_init_values = optim_init_values
         else:
             self.optim_init_values = 0
+
+        self.actions = []
+        self.rewards = []
 
     def init_action_values(self):
         """Initialize action values."""
@@ -83,10 +85,12 @@ class MultiArmedBanditAgent:
 
         # Exloit and explore by the epsilon-greedy strategy.
         action = self._exploit_and_explore(actions)
+        self.actions.append(action)
         return action
 
-    def backup_action_value(self):
+    def backup_action_value(self, reward):
         """Backup action value."""
+        self.rewards.append(reward)
         pass
 
 
