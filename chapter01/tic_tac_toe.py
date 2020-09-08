@@ -205,23 +205,18 @@ class Agent:
             v = self.V[s]
             vals_positions.append((v, (r, c)))
 
-        # Break state-value ties randomly.
-        np.random.shuffle(vals_positions)
-        vals_positions.sort(key=lambda x: x[0], reverse=True)
-
         p = np.random.random()
         if p > self.epsilon:
-            # Exploit by selecting the move with the greatest value.
+            # Exploit by selecting the move with the greatest value,
+            # breaking ties randoml y.
+            np.random.shuffle(vals_positions)
+            vals_positions.sort(key=lambda x: x[0], reverse=True)
             (r, c) = vals_positions[0][1]
             is_greedy = True
         else:
-            # Explore by selecting randomly from among the other moves instead.
-            if len(vals_positions) > 1:
-                vals_positions_explore = vals_positions[1:]
-                n = len(vals_positions_explore)
-                (r, c) = vals_positions_explore[np.random.randint(n)][1]
-            else:
-                (r, c) = vals_positions[0][1]
+            # Explore by selecting randomly from among moves.
+            n = len(vals_positions)
+            (r, c) = vals_positions[np.random.randint(n)][1]
             is_greedy = False
 
         env_next = env.step(r, c, self.symbol)
