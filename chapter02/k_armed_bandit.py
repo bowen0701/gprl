@@ -52,6 +52,13 @@ class MultiArmedBanditAgent:
         self.Q = [0 + self.optim_init_values] * self.k
         self.N = [0] * self.k
 
+    def _explore(self, actions):
+        """Random exploration."""
+        np.random.shuffle(actions)
+        n = len(actions)
+        action = actions[np.random.randint(n)]
+        return action
+
     def _exploit_and_explore(self, actions):
         """Exploit and explore by the epsilon-greedy strategy:
           - Take exploratory moves in the p% of times. 
@@ -59,22 +66,20 @@ class MultiArmedBanditAgent:
         where p% is epsilon. 
         If epsilon is zero, then use the greedy strategy.
         """
-        vals_actions = []
-        for a in actions:
-            v = self.Q[a]
-            vals_actions.append((v, a))
-
         p = np.random.random()
         if p > self.epsilon:
             # Exploit by selecting the action with the greatest value and
             # breaking ties randomly.
+            vals_actions = []
+            for a in actions:
+                v = self.Q[a]
+                vals_actions.append((v, a))
             np.random.shuffle(vals_actions)
             vals_actions.sort(key=lambda x: x[0], reverse=True)
             action = vals_actions[0][1]
         else:
             # Explore by selecting action randomly.
-            n = len(vals_actions)
-            action = vals_actions[np.random.randint(n)][1]
+            action = self._explore(actions)
 
         return action
 
