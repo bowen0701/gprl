@@ -198,25 +198,26 @@ class Agent:
         where p% is epsilon. 
         If epsilon is zero, then use the greedy strategy.
         """
-        vals_positions = []
-        for (r, c) in positions:
-            env_next = env.step(r, c, self.symbol)
-            s = env_next.state
-            v = self.V[s]
-            vals_positions.append((v, (r, c)))
-
         p = np.random.random()
         if p > self.epsilon:
             # Exploit by selecting the move with the greatest value,
-            # breaking ties randoml y.
+            # breaking ties randomly.
+            vals_positions = []
+            for (r, c) in positions:
+                env_next = env.step(r, c, self.symbol)
+                s = env_next.state
+                v = self.V[s]
+                vals_positions.append((v, (r, c)))
+
             np.random.shuffle(vals_positions)
             vals_positions.sort(key=lambda x: x[0], reverse=True)
             (r, c) = vals_positions[0][1]
             is_greedy = True
         else:
             # Explore by selecting randomly from among moves.
-            n = len(vals_positions)
-            (r, c) = vals_positions[np.random.randint(n)][1]
+            np.random.shuffle(positions)
+            n = len(positions)
+            (r, c) = positions[np.random.randint(n)]
             is_greedy = False
 
         env_next = env.step(r, c, self.symbol)
