@@ -28,15 +28,13 @@ class Environment::
 
 
 class MultiArmedBanditAgent:
-    """Agent class for multi-armed bandit."""
+    """Agent class for stationary multi-armed bandit."""
 
     def __init__(self, 
                  k, 
-                 step_size=0.01, 
                  epsilon=0.01,
                  optim_init_values=None):
         self.k = k
-        self.step_size = step_size
         self.epsilon = epsilon
 
         if optim_init_values:
@@ -96,7 +94,10 @@ class MultiArmedBanditAgent:
     def backup_action_value(self, reward):
         """Backup action value."""
         self.rewards.append(reward)
-        pass
+
+        action = self.actions[-1]
+        self.N[action] += 1
+        self.Q[action] += 1 / self.N[action] * (reward - self.Q[action])
 
 
 def k_armed_testbed():
