@@ -92,7 +92,7 @@ class MultiArmedBanditAgent:
         return action
 
     def backup_action_value(self, reward):
-        """Backup action value."""
+        """Backup action value for stationary problem."""
         self.rewards.append(reward)
 
         action = self.actions[-1]
