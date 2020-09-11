@@ -100,7 +100,7 @@ class MultiArmedBanditAgent:
         self.Q[action] += 1 / self.N[action] * (reward - self.Q[action])
 
 
-def k_armed_testbed():
+def k_armed_testbed(runs=2000, steps=1000):
     pass
 
 
