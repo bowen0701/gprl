@@ -22,8 +22,8 @@ class Environment::
         """Get possible (fixed) actions."""
         return list(range(self.k))
 
-    def get_reward(self, action):
-        """Get reward given action."""
+    def step(self, action):
+        """Step by action to get reward."""
         return np.random.normal(self.means[action], REWARD_VAR)
 
 
