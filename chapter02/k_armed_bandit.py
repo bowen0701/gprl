@@ -32,7 +32,7 @@ class MultiArmedBanditAgent:
 
     def __init__(self, 
                  k, 
-                 epsilon=0.01,
+                 epsilon=0.1,
                  optim_init_values=None):
         self.k = k
         self.epsilon = epsilon
@@ -100,7 +100,15 @@ class MultiArmedBanditAgent:
         self.Q[action] += 1 / self.N[action] * (reward - self.Q[action])
 
 
-def k_armed_testbed(runs=2000, steps=1000):
+def k_armed_testbed(k=10,
+                    runs=2000,
+                    steps=1000,
+                    epsilon=0.1,
+                    sample_averages=False,
+                    step_size=0.1,
+                    UCB_exploration=False,
+                    gradient_bandit=False,
+                    optim_init_values=None):
     pass
 
 
