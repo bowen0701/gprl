@@ -3,20 +3,17 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
 
 
-ACTION_VAL_MEAN = 0
-ACTION_VAL_VAR = 1
-REWARD_VAR = 1
-
-
-class Environment::
+class Environment:
     """Environment class for k-armed bandit."""
 
     def __init__(self, k):
         # Simulate k means from standard normal N(0, 1).
         self.k = k
-        self.means = np.random.normal(ACTION_VAL_MEAN, ACTION_VAL_VAR, self.k)
+        self.means = np.random.randn(self.k)
 
     def get_actions(self):
         """Get possible (fixed) actions."""
@@ -24,7 +21,7 @@ class Environment::
 
     def step(self, action):
         """Step by action to get reward."""
-        return np.random.normal(self.means[action], REWARD_VAR)
+        return np.random.randn() + self.means[action]
 
 
 class MultiArmedBanditAgent:
@@ -112,8 +109,19 @@ def k_armed_testbed(k=10,
     pass
 
 
+def figure2_1(k):
+    plt.violinplot(dataset=np.random.randn(k) + np.random.randn(200, k))
+    plt.xlabel("Action")
+    plt.ylabel("Reward distribution")
+    plt.hlines(y=0, xmin=0.5, xmax=10.5, linestyles='dashed')
+    plt.savefig("../images/figure2.1.png")
+    plt.close()
+
+
 def main():
-    pass
+    k = 10
+
+    figure2_1(k)
 
 
 if __name__ == '__main__':
