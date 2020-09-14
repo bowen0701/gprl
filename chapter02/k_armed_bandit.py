@@ -7,17 +7,21 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
+K = 10
+
+
 class Environment:
     """Environment class for k-armed bandit."""
 
-    def __init__(self, k):
+    def __init__(self, K):
         # Simulate k means from standard normal N(0, 1).
-        self.k = k
-        self.means = np.random.randn(self.k)
+        self.K = K
+        self.means = np.random.randn(self.K)
+        self.optimal_action = np.argmax(self.means)
 
     def get_actions(self):
         """Get possible (fixed) actions."""
-        return list(range(self.k))
+        return list(range(self.K))
 
     def step(self, action):
         """Step by action to get reward."""
@@ -28,10 +32,10 @@ class MultiArmedBanditAgent:
     """Agent class for stationary multi-armed bandit."""
 
     def __init__(self, 
-                 k, 
+                 K, 
                  epsilon=0.1,
                  optim_init_values=None):
-        self.k = k
+        self.K = K
         self.epsilon = epsilon
 
         if optim_init_values:
@@ -44,8 +48,8 @@ class MultiArmedBanditAgent:
 
     def init_action_values(self):
         """Initialize action values."""
-        self.Q = [0 + self.optim_init_values] * self.k
-        self.N = [0] * self.k
+        self.Q = [0 + self.optim_init_values] * self.K
+        self.N = [0] * self.K
 
     def _explore(self, actions):
         """Random exploration."""
@@ -97,20 +101,15 @@ class MultiArmedBanditAgent:
         self.Q[action] += 1 / self.N[action] * (reward - self.Q[action])
 
 
-def k_armed_testbed(k=10,
+def k_armed_testbed(K=10,
                     runs=2000,
                     steps=1000,
-                    epsilon=0.1,
-                    sample_averages=False,
-                    step_size=0.1,
-                    UCB_exploration=False,
-                    gradient_bandit=False,
-                    optim_init_values=None):
+                    bandits):
     pass
 
 
-def figure2_1(k):
-    plt.violinplot(dataset=np.random.randn(k) + np.random.randn(200, k))
+def figure2_1():
+    plt.violinplot(dataset=np.random.randn(K) + np.random.randn(200, K))
     plt.xlabel("Action")
     plt.ylabel("Reward distribution")
     plt.hlines(y=0, xmin=0.5, xmax=10.5, linestyles='dashed')
@@ -118,10 +117,14 @@ def figure2_1(k):
     plt.close()
 
 
-def main():
-    k = 10
+def figure2_2():
+    epsilons = [0, 0.01, 0.1]
+    bandits = [MultiArmedBanditAgent(K, epsilon) for epsilon in epsilons]
+    pass
 
-    figure2_1(k)
+
+def main():
+    figure2_1(K)
 
 
 if __name__ == '__main__':
