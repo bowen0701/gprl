@@ -16,8 +16,8 @@ class Environment:
     def __init__(self, K):
         # Simulate k means from standard normal N(0, 1).
         self.K = K
-        self.means = np.random.randn(self.K)
-        self.optimal_action = np.argmax(self.means)
+        self.reward_means = np.random.randn(self.K)
+        self.optim_action = np.argmax(self.reward_means)
 
     def get_actions(self):
         """Get possible (fixed) actions."""
@@ -25,7 +25,7 @@ class Environment:
 
     def step(self, action):
         """Step by action to get reward."""
-        return np.random.randn() + self.means[action]
+        return np.random.randn() + self.reward_means[action]
 
 
 class MultiArmedBanditAgent:
@@ -120,6 +120,9 @@ def figure2_1():
 def figure2_2():
     epsilons = [0, 0.01, 0.1]
     bandits = [MultiArmedBanditAgent(K, epsilon) for epsilon in epsilons]
+    avg_rewards, optim_actions = k_armed_testbed(
+        K=10, runs=2000, steps=1000, bandits)
+
     pass
 
 
