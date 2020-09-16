@@ -31,10 +31,7 @@ class Environment:
 class MultiArmedBanditAgent:
     """Agent class for stationary multi-armed bandit."""
 
-    def __init__(self, 
-                 K, 
-                 epsilon=0.1,
-                 optim_init_values=None):
+    def __init__(self, K, epsilon=0.1, optim_init_values=None):
         self.K = K
         self.epsilon = epsilon
 
@@ -101,11 +98,16 @@ class MultiArmedBanditAgent:
         self.Q[action] += 1 / self.N[action] * (reward - self.Q[action])
 
 
-def k_armed_testbed(K=10,
-                    runs=2000,
-                    steps=1000,
-                    bandits):
-    pass
+def k_armed_testbed(K=10, bandits, runs=2000, steps=1000):
+    n_bandits = len(bandits)
+    rewards = np.zeros((n_bandits, runs, steps))
+    optimal_actions = np.zeros((n_bandits, runs, steps))
+
+    for i, bandit in enumerate(bandits):
+        for r in range(runs):
+            env = Environment(K)
+            for s in range(steps):
+                pass
 
 
 def figure2_1():
@@ -120,8 +122,8 @@ def figure2_1():
 def figure2_2():
     epsilons = [0, 0.01, 0.1]
     bandits = [MultiArmedBanditAgent(K, epsilon) for epsilon in epsilons]
-    avg_rewards, optim_actions = k_armed_testbed(
-        K=10, runs=2000, steps=1000, bandits)
+    avg_rewards, avg_optim_actions = k_armed_testbed(
+        K=10, bandits, runs=2000, steps=1000)
 
     pass
 
