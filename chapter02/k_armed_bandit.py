@@ -79,7 +79,7 @@ class MultiArmedBanditAgent:
 
         return action
 
-    def select_action(self):
+    def select_action(self, env):
         """Select an action from possible actions."""
         # Get next actions from environment.
         actions = env.get_actions()
@@ -106,8 +106,23 @@ def k_armed_testbed(K=10, bandits, runs=2000, steps=1000):
     for i, bandit in enumerate(bandits):
         for r in range(runs):
             env = Environment(K)
+            bandit.init_action_values()
+
             for s in range(steps):
-                pass
+                # Environment and agent interact with each other.
+                action = bandit.get_actions(env)
+                reward = env.step(action)
+                bandit.backup_action_value(reward)
+
+                # Store reward and optimal action indicator.
+                rewards[i, r, s] = reward
+                if action == env.optim_action:
+                    optimal_actions[i, r, s] = 1
+
+    # Average along runs.
+    avg_rewards = rewards.mean(axis=1)
+    avg_optim_actions = optimal_actions(axis=1)
+    return avg_rewards, avg_optim_actions
 
 
 def figure2_1():
