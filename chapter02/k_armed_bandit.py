@@ -98,7 +98,7 @@ class MultiArmedBanditAgent:
         self.Q[action] += 1 / self.N[action] * (reward - self.Q[action])
 
 
-def k_armed_testbed(K=10, bandits, runs=2000, steps=1000):
+def k_armed_testbed(K, bandits, runs=2000, steps=1000):
     n_bandits = len(bandits)
     rewards = np.zeros((n_bandits, runs, steps))
     optimal_actions = np.zeros((n_bandits, runs, steps))
