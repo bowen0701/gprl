@@ -98,7 +98,7 @@ class MultiArmedBanditAgent:
         self.Q[action] += 1 / self.N[action] * (reward - self.Q[action])
 
 
-def k_armed_testbed(K, bandits, runs=2000, steps=1000):
+def k_armed_testbed(K, bandits, runs=2000, steps=1000, print_per_runs=100):
     n_bandits = len(bandits)
     rewards = np.zeros((n_bandits, runs, steps))
     optimal_actions = np.zeros((n_bandits, runs, steps))
@@ -110,7 +110,7 @@ def k_armed_testbed(K, bandits, runs=2000, steps=1000):
 
             for s in range(steps):
                 # Environment and agent interact with each other.
-                action = bandit.get_actions(env)
+                action = bandit.select_action(env)
                 reward = env.step(action)
                 bandit.backup_action_value(reward)
 
@@ -119,9 +119,12 @@ def k_armed_testbed(K, bandits, runs=2000, steps=1000):
                 if action == env.optim_action:
                     optimal_actions[i, r, s] = 1
 
+            if (r + 1) % print_per_runs == 0:
+                print('Run {} for agent {} is completed.'.format(r, i))
+
     # Average along runs.
     avg_rewards = rewards.mean(axis=1)
-    avg_optim_actions = optimal_actions(axis=1)
+    avg_optim_actions = optimal_actions.mean(axis=1)
     return avg_rewards, avg_optim_actions
 
 
@@ -138,7 +141,7 @@ def figure2_2():
     epsilons = [0, 0.01, 0.1]
     bandits = [MultiArmedBanditAgent(K, epsilon) for epsilon in epsilons]
     avg_rewards, avg_optim_actions = k_armed_testbed(
-        K=10, bandits, runs=2000, steps=1000)
+        K, bandits, runs=2000, steps=1000)
 
     pass
 
