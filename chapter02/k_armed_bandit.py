@@ -143,6 +143,7 @@ def figure2_2():
     avg_rewards, avg_optim_actions = k_armed_testbed(
         K, bandits, runs=2000, steps=1000)
 
+    # TODO: Plot figure.
     pass
 
 
