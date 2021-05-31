@@ -166,9 +166,7 @@ class Agent:
 
         # Memoize action state, its parent state & is_greedy bool:
         # state_parent_d:state->parent state & state_isgreedy_d:state->is_greedy bool.
-        self.states = []
-        self.state_parent_d = dict()
-        self.state_isgreedy_d = dict()
+        self.reset_episode()
 
     def init_state_value_table(self):
         """Init state-value table."""
@@ -187,9 +185,9 @@ class Agent:
 
     def reset_episode(self, env):
         """Init episode."""
-        self.states.append(env.state)
-        self.state_parent_d[env.state] = None
-        self.state_isgreedy_d[env.state] = False
+        self.states = []
+        self.state_parent_d = dict()
+        self.state_isgreedy_d = dict()
 
     def _exploit_and_explore(self, env, positions):
         """Exploit and explore by the epsilon-greedy strategy:
@@ -225,8 +223,9 @@ class Agent:
         return (r, c, state_next, is_greedy)
 
     def add_state(self, state_next, is_greedy):
-        state = self.states[-1]
-        self.state_parent_d[state_next] = state
+        if self.states:
+            state = self.states[-1]
+            self.state_parent_d[state_next] = state
         self.state_isgreedy_d[state_next] = is_greedy
         self.states.append(state_next)
         return self
@@ -257,6 +256,8 @@ class Agent:
         at time step t.
         """
         s = self.states[-1]
+        if s not in self.state_parent_d:
+            return None
         s_par = self.state_parent_d[s]
         is_greedy = self.state_isgreedy_d[s]
         if is_greedy:
@@ -277,7 +278,7 @@ class Agent:
             self.V = json.load(open("state_value_o.json"))
 
 
-def self_train(epochs=100000, step_size=0.1, epsilon=0.1, print_per_epochs=100):
+def self_train(epochs=int(1e5), step_size=0.01, epsilon=0.01, print_per_epochs=500):
     """Self train an agent by playing games against itself."""
     agent1 = Agent(player='X', step_size=step_size, epsilon=epsilon)
     agent2 = Agent(player='O', step_size=step_size, epsilon=epsilon)
@@ -435,7 +436,7 @@ def main():
             break
 
     if cmd == 'T':
-        self_train(epochs=100000, step_size=0.1, epsilon=0.1, 
+        self_train(epochs=int(1e5), step_size=0.05, epsilon=0.05, 
                    print_per_epochs=500)
     elif cmd == 'P':
         human_agent_compete()
