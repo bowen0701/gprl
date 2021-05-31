@@ -388,15 +388,15 @@ def human_agent_compete():
     # Set up human & agent as player1 or player2.
     if human_player == 'X':
         # Player1: human, player2: agent.
-        human, agent = Human(player='X'), Agent(player='O', epsilon=0)
+        human, agent = Human(player='X'), Agent(player='O', epsilon=0.0)
         player1, player2 = human, agent
         player1_name, player2_name = human_name, 'Robot'
     else:
         # Player1: agent, player2: human.
-        agent, human = Agent(player='X', epsilon=0), Human(player='O')
+        agent, human = Agent(player='X', epsilon=0.0), Human(player='O')
         player1, player2 = agent, human
         player1_name, player2_name = 'Robot', human_name
-    agent.reset_episode()
+
     agent.load_state_value_table()
 
     # Start competition.
@@ -436,7 +436,7 @@ def main():
             break
 
     if cmd == 'T':
-        self_train(epochs=int(1e5), step_size=0.05, epsilon=0.05, 
+        self_train(epochs=int(1e5), step_size=0.1, epsilon=0.1, 
                    print_per_epochs=500)
     elif cmd == 'P':
         human_agent_compete()
