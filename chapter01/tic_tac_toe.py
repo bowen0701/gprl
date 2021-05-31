@@ -183,7 +183,7 @@ class Agent:
                 # For other cases, agent get reward 0.5.
                 self.V[s] = 0.5
 
-    def reset_episode(self, env):
+    def reset_episode(self):
         """Init episode."""
         self.states = []
         self.state_parent_d = dict()
@@ -292,8 +292,8 @@ def self_train(epochs=int(1e5), step_size=0.01, epsilon=0.01, print_per_epochs=5
     for i in range(1, epochs + 1):
         # Reset both agents after epoch was done.
         env = Environment()
-        agent1.reset_episode(env)
-        agent2.reset_episode(env)
+        agent1.reset_episode()
+        agent2.reset_episode()
 
         while not env.is_done():
             # Agent 1 plays one step.
@@ -396,7 +396,7 @@ def human_agent_compete():
         agent, human = Agent(player='X', epsilon=0), Human(player='O')
         player1, player2 = agent, human
         player1_name, player2_name = 'Robot', human_name
-    agent.reset_episode(env)
+    agent.reset_episode()
     agent.load_state_value_table()
 
     # Start competition.
