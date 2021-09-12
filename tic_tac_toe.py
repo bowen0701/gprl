@@ -17,7 +17,7 @@ CIRCLE = -1
 EMPTY = 0
 
 
-def hash(board):
+def _hash(board):
     return ','.join([str(x) for x in list(board.reshape(BOARD_SIZE))])
 
 
@@ -28,7 +28,7 @@ class Environment:
         self.steps_left = BOARD_SIZE
         self.board = (np.array([EMPTY] * BOARD_SIZE)
                         .reshape((BOARD_NROWS, BOARD_NCOLS)))
-        self.state = hash(self.board)
+        self.state = _hash(self.board)
         self.winner = EMPTY
 
     def get_positions(self):
@@ -93,7 +93,7 @@ class Environment:
         """Take a step with symbol."""
         env_next = self._copy()
         env_next.board[r][c] = symbol
-        env_next.state = hash(env_next.board)
+        env_next.state = _hash(env_next.board)
         env_next.steps_left -= 1
         env_next._judge()
         return env_next
@@ -258,12 +258,14 @@ class Agent:
         at time step t.
         """
         s = self.states[-1]
-        if s not in self.state_parent_d:
-            return None
-        s_par = self.state_parent_d[s]
-        is_greedy = self.state_isgreedy_d[s]
-        if is_greedy:
-            self.V[s_par] += self.step_size * (self.V[s] - self.V[s_par])
+
+        # Traverse back the whole player's states to back up.
+        while s in self.state_parent_d:
+            s_par = self.state_parent_d[s]
+            is_greedy = self.state_isgreedy_d[s]
+            if is_greedy:
+                self.V[s_par] += self.step_size * (self.V[s] - self.V[s_par])
+            s = s_par
 
     def save_state_value_table(self):
         """Save learned state-value table."""
@@ -440,7 +442,7 @@ def main():
             break
 
     if cmd == 'T':
-        self_train(epochs=int(1e5), step_size=0.1, epsilon=0.1, 
+        self_train(epochs=int(1e5), step_size=0.1, epsilon=0.01, 
                    print_per_epochs=500)
     elif cmd == 'P':
         human_agent_compete()
