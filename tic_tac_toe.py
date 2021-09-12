@@ -40,6 +40,19 @@ class Environment:
                     positions.append((r, c))
         return positions
 
+    def is_done(self):
+        """Check the game is done."""
+        return self.steps_left == 0
+
+    def _copy(self):
+        """Copy to a new Environment instance."""
+        env_copy = Environment()
+        env_copy.steps_left = self.steps_left
+        env_copy.board = self.board.copy()
+        env_copy.state = self.state
+        env_copy.winner = self.winner
+        return env_copy
+
     def _judge(self):
         """Judge winner based on the current board."""
         # Check rows.
@@ -76,10 +89,6 @@ class Environment:
                 self.steps_left = 0
                 return self
 
-    def is_done(self):
-        """Check the game is done."""
-        return self.steps_left == 0
-
     def step(self, r, c, symbol):
         """Take a step with symbol."""
         env_next = self._copy()
@@ -88,15 +97,6 @@ class Environment:
         env_next.steps_left -= 1
         env_next._judge()
         return env_next
-
-    def _copy(self):
-        """Copy to a new Environment instance."""
-        env_copy = Environment()
-        env_copy.steps_left = self.steps_left
-        env_copy.board = self.board.copy()
-        env_copy.state = self.state
-        env_copy.winner = self.winner
-        return env_copy
 
     def show_board(self):
         """Show board."""
