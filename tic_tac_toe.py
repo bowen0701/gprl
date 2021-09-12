@@ -191,25 +191,27 @@ class Agent:
 
     def _exploit_and_explore(self, env, positions):
         """Exploit and explore by the epsilon-greedy strategy:
+
+        Procedure:
           - Take exploratory moves in the p% of times. 
           - Take greedy moves in the (100-p)% of times.
         where p% is epsilon. 
-        If epsilon is zero, then use the greedy strategy.
+        If epsilon is zero, then always use greedy strategy.
         """
         p = np.random.random()
         if p > self.epsilon:
-            # Exploit by selecting the move with the greatest value,
-            # breaking ties randomly.
-            vals_positions = []
+            # Exploit by selecting the move with the greatest value.
+            val_positions = []
             for (r, c) in positions:
                 env_next = env.step(r, c, self.symbol)
                 s = env_next.state
                 v = self.V[s]
-                vals_positions.append((v, (r, c)))
+                val_positions.append((v, (r, c)))
 
-            np.random.shuffle(vals_positions)
-            vals_positions.sort(key=lambda x: x[0], reverse=True)
-            (r, c) = vals_positions[0][1]
+            # Break ties randomly: shuffle & sort.
+            np.random.shuffle(val_positions)
+            val_positions.sort(key=lambda x: x[0], reverse=True)
+            (r, c) = val_positions[0][1]
             is_greedy = True
         else:
             # Explore by selecting randomly from among moves.
@@ -266,16 +268,16 @@ class Agent:
     def save_state_value_table(self):
         """Save learned state-value table."""
         if self.symbol == CROSS:
-            json.dump(self.V, open("state_value_x.json", 'w'))
+            json.dump(self.V, open("output/state_value_x.json", 'w'))
         else:
-            json.dump(self.V, open("state_value_o.json", 'w'))
+            json.dump(self.V, open("output/state_value_o.json", 'w'))
 
     def load_state_value_table(self):
         """Load learned state-value table."""
         if self.symbol == CROSS:
-            self.V = json.load(open("state_value_x.json"))
+            self.V = json.load(open("output/state_value_x.json"))
         else:
-            self.V = json.load(open("state_value_o.json"))
+            self.V = json.load(open("output/state_value_o.json"))
 
 
 def self_train(epochs=int(1e5), step_size=0.01, epsilon=0.01, print_per_epochs=500):
@@ -309,16 +311,18 @@ def self_train(epochs=int(1e5), step_size=0.01, epsilon=0.01, print_per_epochs=5
             env = env.step(r2, c2, symbol2)
             agent2.backup_state_value()
 
-        # Set final state with is_greedy=True to backup value.
+        # Set final state with is_greedy=True to backup loser's value.
         is_greedy = True
         if env.winner == CROSS:
+            n_agent1_wins += 1
+
             agent2.add_state(env.state, is_greedy)
             agent2.backup_state_value()
-            n_agent1_wins += 1
         elif env.winner == CIRCLE:
+            n_agent2_wins += 1
+
             agent1.add_state(env.state, is_greedy)
             agent1.backup_state_value()
-            n_agent2_wins += 1
         else:
             n_ties += 1
 
