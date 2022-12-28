@@ -270,16 +270,16 @@ class Agent:
     def save_state_value_table(self):
         """Save learned state-value table."""
         if self.symbol == CROSS:
-            json.dump(self.V, open("output/state_value_x.json", 'w'))
+            json.dump(self.V, open("output/tic_tac_toe_state_value_x.json", 'w'))
         else:
-            json.dump(self.V, open("output/state_value_o.json", 'w'))
+            json.dump(self.V, open("output/tic_tac_toe_state_value_o.json", 'w'))
 
     def load_state_value_table(self):
         """Load learned state-value table."""
         if self.symbol == CROSS:
-            self.V = json.load(open("output/state_value_x.json"))
+            self.V = json.load(open("output/tic_tac_toe_state_value_x.json"))
         else:
-            self.V = json.load(open("output/state_value_o.json"))
+            self.V = json.load(open("output/tic_tac_toe_state_value_o.json"))
 
 
 def self_train(epochs=int(1e5), step_size=0.01, epsilon=0.01, print_per_epochs=500):
