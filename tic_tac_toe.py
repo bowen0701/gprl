@@ -17,10 +17,6 @@ CIRCLE = -1
 EMPTY = 0
 
 
-def _hash(board):
-    return ','.join([str(x) for x in list(board.reshape(BOARD_SIZE))])
-
-
 class Environment:
     """Environment class for Tic-Tac Toe."""
 
@@ -28,8 +24,12 @@ class Environment:
         self.steps_left = BOARD_SIZE
         self.board = (np.array([EMPTY] * BOARD_SIZE)
                         .reshape((BOARD_NROWS, BOARD_NCOLS)))
-        self.state = _hash(self.board)
+        self.state = self._hash(self.board)
         self.winner = EMPTY
+
+    @staticmethod
+    def _hash(board):
+        return ','.join([str(x) for x in list(board.reshape(BOARD_SIZE))])
 
     def get_positions(self):
         """Get possible action positions given current board."""
@@ -93,7 +93,7 @@ class Environment:
         """Take a step with symbol."""
         env_next = self._copy()
         env_next.board[r][c] = symbol
-        env_next.state = _hash(env_next.board)
+        env_next.state = self._hash(env_next.board)
         env_next.steps_left -= 1
         env_next._judge()
         return env_next
@@ -115,35 +115,32 @@ class Environment:
         for r in range(BOARD_NROWS):
             print(board[r])
 
+    @staticmethod
+    def _dfs_states(cur_symbol, env, all_state_env_d):
+        """DFS for next state by recursion."""
+        for r in range(BOARD_NROWS):
+            for c in range(BOARD_NCOLS):
+                if env.board[r][c] == EMPTY:
+                    env_next = env.step(r, c, cur_symbol)
+                    if env_next.state not in all_state_env_d:
+                        all_state_env_d[env_next.state] = env_next
 
-def _dfs_states(cur_symbol, env, all_state_env_d):
-    """DFS for next state by recursion."""
-    for r in range(BOARD_NROWS):
-        for c in range(BOARD_NCOLS):
-            if env.board[r][c] == EMPTY:
-                env_next = env.step(r, c, cur_symbol)
-                if env_next.state not in all_state_env_d:
-                    all_state_env_d[env_next.state] = env_next
+                        # If game is not ended, continue DFS.
+                        if not env_next.is_done():
+                            Environment._dfs_states(-cur_symbol, env_next, all_state_env_d)
 
-                    # If game is not ended, continue DFS.
-                    if not env_next.is_done():
-                        _dfs_states(-cur_symbol, env_next, all_state_env_d)
+    @classmethod
+    def get_all_states(cls):
+        """Get all states from the init state."""
+        # The player who plays first always uses 'X'.
+        cur_symbol = CROSS
 
-
-def get_all_states():
-    """Get all states from the init state."""
-    # The player who plays first always uses 'X'.
-    cur_symbol = CROSS
-
-    # Apply DFS to collect all states.
-    env = Environment()
-    all_state_env_d = dict()
-    all_state_env_d[env.state] = env
-    _dfs_states(cur_symbol, env, all_state_env_d)
-    return all_state_env_d
-
-
-ALL_STATE_ENV_D = get_all_states()
+        # Apply DFS to collect all states.
+        env = Environment()
+        all_state_env_d = dict()
+        all_state_env_d[env.state] = env
+        cls._dfs_states(cur_symbol, env, all_state_env_d)
+        return all_state_env_d
 
 
 class Agent:
@@ -170,7 +167,7 @@ class Agent:
 
     def init_state_value_table(self):
         """Init state-value table."""
-        all_state_env_d = ALL_STATE_ENV_D
+        all_state_env_d = Environment.get_all_states()
 
         for s, env in all_state_env_d.items():
             if env.winner == self.symbol:
@@ -270,16 +267,34 @@ class Agent:
     def save_state_value_table(self):
         """Save learned state-value table."""
         if self.symbol == CROSS:
-            json.dump(self.V, open("output/tic_tac_toe_state_value_x.json", 'w'))
+            json.dump(
+                self.V, 
+                open(f"output/tic_tac_toe_state_value_x_"
+                     f"step_size={self.step_size}_epsilon={self.epsilon}.json", 
+                     'w'
+                )
+            )
         else:
-            json.dump(self.V, open("output/tic_tac_toe_state_value_o.json", 'w'))
+            json.dump(
+                self.V, 
+                open(f"output/tic_tac_toe_state_value_o_"
+                     f"step_size={self.step_size}_epsilon={self.epsilon}.json", 
+                     'w'
+                )
+            )
 
-    def load_state_value_table(self):
+    def load_state_value_table(self, step_size, epsilon):
         """Load learned state-value table."""
         if self.symbol == CROSS:
-            self.V = json.load(open("output/tic_tac_toe_state_value_x.json"))
+            self.V = json.load(
+                open(f"output/tic_tac_toe_state_value_x_"
+                     f"step_size={step_size}_epsilon={epsilon}.json")
+            )
         else:
-            self.V = json.load(open("output/tic_tac_toe_state_value_o.json"))
+            self.V = json.load(
+                open(f"output/tic_tac_toe_state_value_o_"
+                     f"step_size={step_size}_epsilon={epsilon}.json")
+            )
 
 
 def self_train(epochs=int(1e5), step_size=0.01, epsilon=0.01, print_per_epochs=500):
@@ -377,7 +392,7 @@ class Human:
         return r, c, self.symbol
 
 
-def human_agent_compete():
+def human_agent_compete(step_size, epsilon):
     """Human compete with agent."""
     # Get human player.
     human_name = input('Please input your name:\n')
@@ -403,7 +418,7 @@ def human_agent_compete():
         player1, player2 = agent, human
         player1_name, player2_name = 'Robot', human_name
 
-    agent.load_state_value_table()
+    agent.load_state_value_table(step_size, epsilon)
 
     # Start competition.
     while not env.is_done():
@@ -436,16 +451,19 @@ def human_agent_compete():
 
 
 def main():
+    step_size = 0.1
+    epsilon = 0.013
+
     while True:
         cmd = input('Train robot (T) or play game (P)? ')
         if cmd in ['T', 'P']:
             break
 
     if cmd == 'T':
-        self_train(epochs=int(1e5), step_size=0.1, epsilon=0.01, 
+        self_train(epochs=int(1e5), step_size=step_size, epsilon=epsilon, 
                    print_per_epochs=500)
     elif cmd == 'P':
-        human_agent_compete()
+        human_agent_compete(step_size=step_size, epsilon=epsilon)
 
 
 if __name__ == '__main__':
