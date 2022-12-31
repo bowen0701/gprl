@@ -452,7 +452,7 @@ def human_agent_compete(step_size, epsilon):
 
 def main():
     step_size = 0.1
-    epsilon = 0.013
+    epsilon = 0.01
 
     while True:
         cmd = input('Train robot (T) or play game (P)? ')
